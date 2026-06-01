@@ -1,15 +1,16 @@
-const CACHE_NAME = "lilith-studio-v44";
+const CACHE_NAME = "lilith-studio-v45";
+const BASE = "/CreativeSpace";
 
 const PRECACHE = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/favicon.png",
+  BASE + "/",
+  BASE + "/index.html",
+  BASE + "/manifest.json",
+  BASE + "/icon-192.png",
+  BASE + "/icon-512.png",
+  BASE + "/favicon.png",
 ];
 
-const CDN_CACHE = "lilith-cdn-v43";
+const CDN_CACHE = "lilith-cdn-v44";
 const CDN_URLS = [
   "https://unpkg.com/react@18/umd/react.production.min.js",
   "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js",
@@ -52,7 +53,6 @@ self.addEventListener("activate", function(event) {
 self.addEventListener("fetch", function(event) {
   var url = event.request.url;
   if (url.includes("api.anthropic.com")) return;
-  // Ne jamais intercepter les requetes POST ou les appels Supabase/Cloudinary
   if (event.request.method !== "GET") return;
   if (url.includes("supabase.co") || url.includes("cloudinary.com")) return;
 
@@ -68,7 +68,7 @@ self.addEventListener("fetch", function(event) {
         return response;
       }).catch(function() {
         if (event.request.mode === "navigate") {
-          return caches.match("/index.html");
+          return caches.match(BASE + "/index.html");
         }
       });
     })

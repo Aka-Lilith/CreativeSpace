@@ -4,19 +4,20 @@
   "description": "Art Skill Tracker, Worldbuilding & DIY Hobbies",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/CreativeSpace/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "/CreativeSpace/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/CreativeSpace/",
+  "scope": "/CreativeSpace/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#7C5CBF",

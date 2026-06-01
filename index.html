@@ -9520,7 +9520,7 @@ root.render(React.createElement(App));
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function() {
-    navigator.serviceWorker.register("/service-worker.js").catch(function(e) {
+    navigator.serviceWorker.register("/CreativeSpace/service-worker.js").catch(function(e) {
       console.log("SW non enregistré:", e);
     });
   });
