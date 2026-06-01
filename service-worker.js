@@ -10,7 +10,7 @@ const PRECACHE = [
   BASE + "/favicon.png",
 ];
 
-const CDN_CACHE = "lilith-cdn-v45";
+const CDN_CACHE = "lilith-cdn-v47";
 const CDN_URLS = [
   "https://unpkg.com/react@18/umd/react.production.min.js",
   "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js",

@@ -277,7 +277,7 @@ function calcDecayPenalties(history, decayState, allDates) {
 const XP_PER_LEVEL   = 100;
 const TASKS_PER_PAGE = 10;
 const COLORS = ["#7F77DD","#1D9E75","#D85A30","#378ADD","#BA7517","#D4537E","#639922","#8B5CF6"];
-const DEFAULT_THEMES = ["Echauffement","Cartoon","Nature","Dark Fairycore","Personnages","Anatomie","Aquarelle","Environnements","Theorie couleur","Character Design","Lineart","Methode","Illustration vectorielle","Animation","3D Modeling","Narration visuelle","Pixel Art","Cottagecore","Witchcore","Goblincore","Forestpunk","Mushroomcore","Fantasy médiéval","Mythologie","Steampunk","Solarpunk","Biopunk","Ukiyo-e","Art Nouveau","Comics / BD","Storybook","Sketch urbain","Horreur douce","Dreamcore","Liminal spaces"];
+const DEFAULT_THEMES = ["Echauffement","Cartoon","Nature","Dark Fairycore","Personnages","Anatomie","Aquarelle/Peinture","Environnements","Theorie couleur","Character Design","Lineart","Methode","Illustration vectorielle","Animation","3D Modeling","Narration visuelle","Pixel Art","Cottagecore","Witchcore","Goblincore","Forestpunk","Mushroomcore","Fantasy médiéval","Mythologie","Steampunk","Solarpunk","Biopunk","Ukiyo-e","Art Nouveau","Comics / BD","Storybook","Sketch urbain","Horreur douce","Dreamcore","Liminal spaces"];
 const DIFF_COLOR = { Facile:"#1D9E75", Moyen:"#BA7517", Difficile:"#D4537E" };
 
 const DIFF = {
@@ -426,7 +426,7 @@ const DEFAULT_SKILLS = [
   {id:4,  name:"Perspective",         color:"#378ADD",level:1,xp:0},
   {id:5,  name:"Composition",         color:"#BA7517",level:1,xp:0},
   {id:6,  name:"Lumiere et Ombres",   color:"#D4537E",level:1,xp:0},
-  {id:7,  name:"Aquarelle",           color:"#0EA5C8",level:1,xp:0},
+  {id:7,  name:"Aquarelle/Peinture",   color:"#0EA5C8",level:1,xp:0},
   {id:8,  name:"Pixel Art",           color:"#7C3AED",level:1,xp:0},
   {id:9,  name:"Animation",           color:"#E57C1B",level:1,xp:0},
   {id:10, name:"Character Design",    color:"#C2297A",level:1,xp:0},
@@ -467,12 +467,12 @@ const DEFAULT_TASKS = [
   {id:613,name:"Silhouette complète en formes",  theme:"Anatomie",rewards:[{skillId:1,xp:20,optional:false},{skillId:5,xp:5,optional:false}]},
   {id:614,name:"Référence animal → simplifié",   theme:"Anatomie",rewards:[{skillId:1,xp:20,optional:false},{skillId:3,xp:10,optional:false}]},
   // --- Aquarelle ---
-  {id:701,name:"Aplats humide sur humide",        theme:"Aquarelle",rewards:[{skillId:2,xp:15,optional:false},{skillId:7,xp:15,optional:false}]},
-  {id:704,name:"Champignon dark aquarelle",       theme:"Aquarelle",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:15,optional:false},{skillId:6,xp:10,optional:false},{skillId:3,xp:15,optional:false}]},
-  {id:705,name:"Ciel nocturne en fondu",          theme:"Aquarelle",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:20,optional:false},{skillId:6,xp:10,optional:false}]},
-  {id:706,name:"Illustration fairycore encre + aquarelle",theme:"Aquarelle",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:15,optional:false},{skillId:12,xp:15,optional:false},{skillId:5,xp:10,optional:false},{skillId:3,xp:20,optional:false}]},
-  {id:711,name:"Texture magique aquarelle",       theme:"Aquarelle",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:10,optional:false},{skillId:3,xp:10,optional:false}]},
-  {id:712,name:"Portrait créature fairycore",     theme:"Aquarelle",rewards:[{skillId:7,xp:20,optional:false},{skillId:10,xp:15,optional:false},{skillId:12,xp:10,optional:false},{skillId:2,xp:10,optional:false}]},
+  {id:701,name:"Aplats humide sur humide",        theme:"Aquarelle/Peinture",rewards:[{skillId:2,xp:15,optional:false},{skillId:7,xp:15,optional:false}]},
+  {id:704,name:"Champignon dark aquarelle",       theme:"Aquarelle/Peinture",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:15,optional:false},{skillId:6,xp:10,optional:false},{skillId:3,xp:15,optional:false}]},
+  {id:705,name:"Ciel nocturne en fondu",          theme:"Aquarelle/Peinture",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:20,optional:false},{skillId:6,xp:10,optional:false}]},
+  {id:706,name:"Illustration fairycore encre + aquarelle",theme:"Aquarelle/Peinture",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:15,optional:false},{skillId:12,xp:15,optional:false},{skillId:5,xp:10,optional:false},{skillId:3,xp:20,optional:false}]},
+  {id:711,name:"Texture magique aquarelle",       theme:"Aquarelle/Peinture",rewards:[{skillId:7,xp:20,optional:false},{skillId:2,xp:10,optional:false},{skillId:3,xp:10,optional:false}]},
+  {id:712,name:"Portrait créature fairycore",     theme:"Aquarelle/Peinture",rewards:[{skillId:7,xp:20,optional:false},{skillId:10,xp:15,optional:false},{skillId:12,xp:10,optional:false},{skillId:2,xp:10,optional:false}]},
   // --- Environnements ---
   {id:806,name:"Bâtiment stylisé",               theme:"Environnements",rewards:[{skillId:4,xp:20,optional:false},{skillId:5,xp:10,optional:false},{skillId:11,xp:10,optional:false}]},
   {id:807,name:"Scène forêt avec profondeur",    theme:"Environnements",rewards:[{skillId:4,xp:15,optional:false},{skillId:5,xp:20,optional:false},{skillId:6,xp:10,optional:false},{skillId:11,xp:15,optional:false}]},
@@ -3316,7 +3316,7 @@ var GEN_BANK = {
       {name:"Ombres portées — formes complexes", desc:"Une sphère sur un cube, un cube sur un cylindre. Les ombres portées suivent la forme de la surface sur laquelle elles tombent. Dessine les formes d'ombre précisément."},
       {name:"Éclairage dramatique — clair-obscur", desc:"80% de l'image dans l'ombre, 20% très éclairé. Un seul point lumineux fort. Inspire-toi du style de Caravage. Idéal pour un visage ou une main tendue vers la lumière."},
     ],
-    "Aquarelle": [
+    "Aquarelle/Peinture": [
       {name:"Lavis progressif — humide sur humide", desc:"Mouille entièrement ta feuille. Pose une couleur diluée et laisse-la se répandre. Ajoute une deuxième couleur avant que la première sèche et observe le fondu naturel."},
       {name:"Réserves blanches", desc:"En aquarelle le blanc c'est le papier. Planifie tes zones de lumière avant de commencer et protège-les. Travaille du clair vers le foncé."},
       {name:"Textures au sel", desc:"Après avoir posé un lavis humide, saupoudre du sel de cuisine. Observe le résultat en séchant. Parfait pour simuler des textures organiques comme l'écorce ou la pierre."},
@@ -3481,7 +3481,7 @@ var GEN_BANK = {
     "Théorie des couleurs": ["teste ta palette en niveaux de gris avant d'appliquer les couleurs","les couleurs chaudes avancent, les froides reculent","une couleur isolée n'a pas de sens, c'est toujours une relation","sature moins que ce que tu crois nécessaire","le blanc et le noir modifient la teinte, pas seulement la valeur"],
     "Composition": ["fais 3 miniatures en 5 minutes avant de commencer","le format dicte la composition — adapte-toi ou choisis-le consciemment","l'espace vide est un élément actif, pas un vide","crée de la tension en plaçant ton sujet légèrement hors-centre","varie la taille des éléments pour créer de la hiérarchie"],
     "Lumière et Ombres": ["décide d'une seule source de lumière et reste cohérent","les ombres portées sont plus foncées que les ombres propres","la lumière réfléchie est légère, ne pas la surcharger","les transitions douces = lumière diffuse, dures = lumière directe","peins d'abord toutes les ombres, puis toutes les lumières"],
-    "Aquarelle": ["mouille le papier pour des fondus, laisse-le sec pour des contours nets","travaille toujours du clair vers le foncé","laisse sécher complètement avant d'ajouter une couche","les erreurs en aquarelle sont souvent des heureux accidents","ne cherche pas à tout contrôler — laisse le médium travailler"],
+    "Aquarelle/Peinture": ["mouille le papier pour des fondus, laisse-le sec pour des contours nets","travaille toujours du clair vers le foncé","laisse sécher complètement avant d'ajouter une couche","les erreurs en aquarelle sont souvent des heureux accidents","ne cherche pas à tout contrôler — laisse le médium travailler"],
     "Character Design": ["la silhouette doit être lisible à 5cm de hauteur","chaque accessoire doit avoir une raison d'être","la tenue en dit autant sur le personnage que son visage","varie les formes : personnages ronds vs anguleux, grands vs petits","un personnage mémorable a une caractéristique distinctive forte"],
     "Lineart / Encrage": ["varie l'épaisseur du trait pour créer de la profondeur","les lignes du premier plan sont plus épaisses","les traits confiants sont plus beaux que les traits hésitants","les erreurs d'encrage peuvent devenir des éléments de composition","laisse respirer — tout n'a pas besoin d'être encré"],
     "Perspective": ["l'horizon = hauteur des yeux du spectateur","tous les points de fuite sont sur la ligne d'horizon","la perspective atmosphérique : plus c'est loin, plus c'est pâle et flou","commence par les grandes lignes de construction avant les détails","les cercles en perspective deviennent des ellipses"],
@@ -3587,7 +3587,7 @@ function GenerateurIA(props) {
   var block = {background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"};
   var inp = {padding:"8px 12px",borderRadius:10,fontSize:13,border:"1px solid "+THEME.borderLight,background:THEME.inputBg,color:THEME.text};
 
-  var SKILL_THEMES = ["Echauffement","Anatomie","Aquarelle","Theorie couleur","Character Design","Lineart","Methode","Environnements","Personnages","3D Modeling","Narration visuelle","Illustration vectorielle","Animation","Pixel Art","Digital Art","Traditionnel Art"];
+  var SKILL_THEMES = ["Echauffement","Anatomie","Aquarelle/Peinture","Theorie couleur","Character Design","Lineart","Methode","Environnements","Personnages","3D Modeling","Narration visuelle","Illustration vectorielle","Animation","Pixel Art","Digital Art","Traditionnel Art"];
   var styleThemes = themes.filter(function(t) { return !SKILL_THEMES.includes(t); });
   if (styleThemes.length === 0) styleThemes = ["Dark Fairycore","Nature","Cartoon"];
 
