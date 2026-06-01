@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+<!DOC
+
+      {/* Widget résumé */}
+      <DashboardWidget onOpen={onOpen}/>TYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/>
@@ -1120,6 +1123,7 @@ function TaskEditor(props) {
   const [rewards, setRewards] = useState(task ? task.rewards.filter(function(r) { return r.skillId !== 14 && r.skillId !== 15; }).map(function(r) { return {...r}; }) : [{...blank}]);
   const [newTheme, setNewTheme] = useState("");
   const [showNewTheme, setShowNewTheme] = useState(false);
+  const [difficulty, setDifficulty] = useState(task ? (task.difficulty || "") : "");
 
   function setR(i, k, v) { setRewards(function(p) { return p.map(function(r, j) { return j === i ? {...r,[k]:v} : r; }); }); }
 
@@ -1133,7 +1137,7 @@ function TaskEditor(props) {
 
   function handleSave() {
     if (!name.trim()) return;
-    var saved = {id:task?task.id:Date.now(),name:name.trim(),theme:theme,rewards:rewards};
+    var saved = {id:task?task.id:Date.now(),name:name.trim(),theme:theme,rewards:rewards,difficulty:difficulty||null};
     if (desc.trim()) DESCS[saved.id] = desc.trim();
     onSave(saved);
   }
@@ -1157,6 +1161,19 @@ function TaskEditor(props) {
             style={{flex:1}}
           />
           <button onClick={function() { setShowNewTheme(function(v) { return !v; }); }} style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",border:"1px solid "+THEME.border,background:THEME.surfaceLight,color:THEME.textSub,fontSize:13}}>+ Cat</button>
+        </div>
+        <div style={{marginBottom:"1rem"}}>
+          <CustomSelect
+            value={difficulty}
+            onChange={setDifficulty}
+            options={[
+              {value:"",      label:"— Difficulté (optionnel) —"},
+              {value:"facile",  label:"🟢 Facile"},
+              {value:"moyen",   label:"🟡 Moyen"},
+              {value:"difficile",label:"🔴 Difficile"},
+              {value:"expert",  label:"⚫ Expert"},
+            ]}
+          />
         </div>
         {showNewTheme && (
           <div style={{display:"flex",gap:6,marginBottom:"1rem"}}>
@@ -5541,9 +5558,6 @@ function HomeScreen(props) {
         </div>
       )}
 
-      {/* Widget résumé */}
-      <DashboardWidget onOpen={onOpen}/>
-
       {/* Header */}
       <div style={{textAlign:"center",animation:"fadeUp 0.6s ease both",zIndex:1}}>
         <div style={{fontSize:52,marginBottom:10,animation:"float 3.5s ease-in-out infinite"}}>✦</div>
@@ -9520,7 +9534,7 @@ root.render(React.createElement(App));
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function() {
-    navigator.serviceWorker.register("/CreativeSpace/service-worker.js").catch(function(e) {
+    navigator.serviceWorker.register("/service-worker.js").catch(function(e) {
       console.log("SW non enregistré:", e);
     });
   });
