@@ -9795,7 +9795,8 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", function() {
     var swPath = (window.location.pathname.startsWith("/CreativeSpace") ? "/CreativeSpace" : "") + "/service-worker.js";
     navigator.serviceWorker.register(swPath).then(function(reg) {
-      // Dès qu'un nouveau SW est en attente, on lui dit de prendre le contrôle immédiatement
+      // Quand un nouveau SW est en attente, on lui dit de prendre le contrôle
+      // mais on NE recharge PAS automatiquement — la prochaine ouverture de l'app suffit
       function applyUpdate(worker) {
         worker.postMessage({ type: "SKIP_WAITING" });
       }
@@ -9810,14 +9811,6 @@ if ("serviceWorker" in navigator) {
             applyUpdate(newWorker);
           }
         });
-      });
-      // Recharge la page quand le nouveau SW prend le contrôle
-      var refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", function() {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
       });
     }).catch(function(e) {
       console.log("SW non enregistré:", e);
