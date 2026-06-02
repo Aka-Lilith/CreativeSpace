@@ -4706,7 +4706,8 @@ function ArtTrackerApp(props) {
   ];
 
   return (
-    <div style={{padding:"1.1rem 1rem 3rem",maxWidth:720,margin:"0 auto",minHeight:"100vh",background:bg,display:"flex",flexDirection:"column",gap:14,color:THEME.text,position:"relative",overflow:"hidden"}}>
+    <div style={{minHeight:"100vh",background:bg,position:"relative"}}>
+    <div style={{padding:"1.1rem 1rem 3rem",maxWidth:720,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",gap:14,color:THEME.text,position:"relative",overflow:"hidden"}}>
 
       {/* Formes décoratives de fond */}
       <svg style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:720,height:"100%",pointerEvents:"none",zIndex:0,opacity:THEME.decoOpacity}} viewBox="0 0 720 900" preserveAspectRatio="xMidYMid slice">
@@ -5357,7 +5358,8 @@ function ArtTrackerApp(props) {
         </div>
       )}
       </div>{/* end inner content zIndex:1 */}
-    </div>
+    </div>{/* end inner max-width container */}
+    </div>{/* end outer background wrapper */}
   );
 }
 
