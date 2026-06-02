@@ -1,4 +1,4 @@
-const CACHE_NAME = "lilith-studio-v49";
+const CACHE_NAME = "lilith-studio-v52";
 const BASE = "/CreativeSpace";
 
 const PRECACHE = [
@@ -10,7 +10,7 @@ const PRECACHE = [
   BASE + "/favicon.png",
 ];
 
-const CDN_CACHE = "lilith-cdn-v49";
+const CDN_CACHE = "lilith-cdn-v52";
 const CDN_URLS = [
   "https://unpkg.com/react@18/umd/react.production.min.js",
   "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js",
@@ -35,6 +35,7 @@ self.addEventListener("install", function(event) {
       }),
     ])
   );
+  // Prend le contrôle immédiatement sans attendre la fermeture des onglets
   self.skipWaiting();
 });
 
@@ -45,9 +46,18 @@ self.addEventListener("activate", function(event) {
         keys.filter(function(k) { return k !== CACHE_NAME && k !== CDN_CACHE; })
             .map(function(k) { return caches.delete(k); })
       );
+    }).then(function() {
+      // Prend le contrôle de tous les onglets ouverts immédiatement
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
+});
+
+// Message depuis l'app pour forcer le skip waiting si un nouveau SW attend
+self.addEventListener("message", function(event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", function(event) {
@@ -58,6 +68,18 @@ self.addEventListener("fetch", function(event) {
 
   event.respondWith(
     caches.match(event.request).then(function(cached) {
+      // Network-first pour index.html pour toujours avoir la dernière version
+      if (url.endsWith("/") || url.includes("index.html")) {
+        return fetch(event.request).then(function(response) {
+          if (!response || response.status !== 200) return cached || response;
+          var clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
+          return response;
+        }).catch(function() {
+          return cached || caches.match(BASE + "/index.html");
+        });
+      }
+      // Cache-first pour le reste
       if (cached) return cached;
       return fetch(event.request).then(function(response) {
         if (!response || response.status !== 200) return response;

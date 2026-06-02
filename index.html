@@ -9793,7 +9793,33 @@ root.render(React.createElement(App));
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function() {
-    navigator.serviceWorker.register("/service-worker.js").catch(function(e) {
+    var swPath = (window.location.pathname.startsWith("/CreativeSpace") ? "/CreativeSpace" : "") + "/service-worker.js";
+    navigator.serviceWorker.register(swPath).then(function(reg) {
+      // Dès qu'un nouveau SW est en attente, on lui dit de prendre le contrôle immédiatement
+      function applyUpdate(worker) {
+        worker.postMessage({ type: "SKIP_WAITING" });
+      }
+      if (reg.waiting) {
+        applyUpdate(reg.waiting);
+      }
+      reg.addEventListener("updatefound", function() {
+        var newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", function() {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            applyUpdate(newWorker);
+          }
+        });
+      });
+      // Recharge la page quand le nouveau SW prend le contrôle
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function() {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }).catch(function(e) {
       console.log("SW non enregistré:", e);
     });
   });
