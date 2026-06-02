@@ -4269,7 +4269,7 @@ function ArtTrackerApp(props) {
 
   // Chargement initial
   useEffect(function() {
-    Promise.all([
+    Promise.allSettled([
       storage.get(STORAGE_KEY),
       storage.get(THEMES_KEY),
       storage.get("art_tracker_theme_v1"),
@@ -4282,17 +4282,17 @@ function ArtTrackerApp(props) {
       storage.get(DECAY_KEY),
       storage.get(GLOBAL_XP_KEY),
     ]).then(function(results) {
-      var d          = results[0];
-      var t          = results[1];
-      var th         = results[2];
-      var fav        = results[3];
-      var chall      = results[4];
-      var form       = results[5];
-      var timer      = results[6];
-      var gal        = results[7];
-      var proj       = results[8];
-      var decay      = results[9];
-      // results[10] = globalXp ignoré, recalculé depuis skills
+      function val(i) { return results[i].status === "fulfilled" ? results[i].value : null; }
+      var d     = val(0);
+      var t     = val(1);
+      var th    = val(2);
+      var fav   = val(3);
+      var chall = val(4);
+      var form  = val(5);
+      var timer = val(6);
+      var gal   = val(7);
+      var proj  = val(8);
+      var decay = val(9);
 
       if (d) {
         setSkills(migrateSkills(d.skills));
@@ -4319,6 +4319,13 @@ function ArtTrackerApp(props) {
       if (proj)  setProjects(proj);
       if (decay) setDecayState(decay);
 
+      setLoaded(true);
+    }).catch(function() {
+      // Fallback complet si tout échoue
+      setSkills(DEFAULT_SKILLS);
+      setTasks(injectMedium(DEFAULT_TASKS));
+      setHistory([]);
+      setCC({});
       setLoaded(true);
     });
   }, []);
