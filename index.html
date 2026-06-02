@@ -6356,11 +6356,11 @@ data }) {
   var projects = data.projects;
 
   var hobbyStats = {};
-  hobbies.forEach(function(h) { hobbyStats[h.id] = { done: 0, total: 0 }; });
+  hobbies.forEach(function(h) { hobbyStats[h.id] = { xp: 0, total: 0 }; });
   projects.forEach(function(p) {
-    if (!hobbyStats[p.hobby]) hobbyStats[p.hobby] = { done: 0, total: 0 };
+    if (!hobbyStats[p.hobby]) hobbyStats[p.hobby] = { xp: 0, total: 0 };
     hobbyStats[p.hobby].total++;
-    if (p.status === "done") hobbyStats[p.hobby].done++;
+    hobbyStats[p.hobby].xp += (p.xp || 0);
   });
 
   var displayed = hobbies.filter(function(h) {
@@ -6378,7 +6378,7 @@ data }) {
   var n = displayed.length;
   var cx = 130, cy = 130, r = 90;
   var maxVal = Math.max.apply(null, displayed.map(function(h) {
-    return hobbyStats[h.id].total;
+    return hobbyStats[h.id].xp;
   }).concat([1]));
 
   function angle(i) { return (i / n) * 2 * Math.PI - Math.PI / 2; }
@@ -6391,7 +6391,7 @@ data }) {
 
   var levels = [0.25, 0.5, 0.75, 1];
   var dataRatios = displayed.map(function(h) {
-    return Math.max(0.05, hobbyStats[h.id].total / maxVal);
+    return Math.max(0.05, hobbyStats[h.id].xp / maxVal);
   });
   var dataPts = displayed.map(function(_, i) { var p = pt(i, dataRatios[i]); return p[0] + "," + p[1]; }).join(" ");
 
@@ -6464,7 +6464,7 @@ data }) {
                 <div style={{ fontSize: 10, fontWeight: 500, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {h.emoji} {h.label}
                 </div>
-                <div style={{ fontSize: 9, color: T.textMuted }}>{s.done}/{s.total} terminé{s.done > 1 ? "s" : ""}</div>
+                <div style={{ fontSize: 9, color: T.textMuted }}>{s.xp} XP • {s.total} projet{s.total > 1 ? "s" : ""}</div>
               </div>
             </div>
           );
