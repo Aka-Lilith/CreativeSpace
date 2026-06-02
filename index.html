@@ -993,6 +993,10 @@ function HistoryEntry(props) {
   const [editingDate, setEditingDate] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showFreeBonus, setShowFreeBonus] = useState(false);
+  const [freeBonusSkill, setFreeBonusSkill] = useState(skills && skills[0] ? skills[0].id : null);
+  const [freeBonusXp, setFreeBonusXp] = useState(10);
+  const [freeBonusConfirm, setFreeBonusConfirm] = useState(false);
 
   function startEditDate() {
     // Convertir DD/MM/YYYY HH:MM en YYYY-MM-DD pour l'input date
@@ -1067,7 +1071,10 @@ function HistoryEntry(props) {
           )}
           <div style={{display:"flex",gap:4,alignItems:"center"}}>
             {unclaimed.length > 0 && (
-              <button onClick={function() { setOpen(function(v) { return !v; }); }} style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accent+"44",background:THEME.accent+"12",color:THEME.accent,cursor:"pointer"}}>{open?"fermer":"bonus"}</button>
+              <button onClick={function() { setOpen(function(v) { return !v; }); setShowFreeBonus(false); }} style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accent+"44",background:THEME.accent+"12",color:THEME.accent,cursor:"pointer"}}>{open?"fermer":"bonus"}</button>
+            )}
+            {onAddBonus && (
+              <button onClick={function() { setShowFreeBonus(function(v) { return !v; }); setOpen(false); setFreeBonusConfirm(false); }} title="Ajouter un XP libre" style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accentGreen+"44",background:showFreeBonus?THEME.accentGreen+"20":THEME.accentGreen+"10",color:THEME.accentGreen,cursor:"pointer",fontWeight:showFreeBonus?600:400}}>+XP</button>
             )}
             {onRemove && !confirmDelete && (
               <button onClick={function() { setConfirmDelete(true); }} title="Annuler et retirer l'XP" style={{fontSize:11,padding:"2px 7px",borderRadius:20,border:"1px solid "+THEME.accentPink+"44",background:THEME.accentPink+"10",color:THEME.accentPink,cursor:"pointer"}}>↩</button>
@@ -1082,6 +1089,7 @@ function HistoryEntry(props) {
           </div>
         </div>
       </div>
+      {/* Panel bonus optionnels existants */}
       {open && unclaimed.length > 0 && (
         <div style={{marginTop:8,paddingTop:8,borderTop:"0.5px solid "+THEME.border}}>
           <div style={{fontSize:11,color:THEME.textMuted,marginBottom:5}}>Bonus retroactif :</div>
@@ -1097,6 +1105,72 @@ function HistoryEntry(props) {
             );
           })}
           <button onClick={claim} style={{marginTop:4,padding:"5px 12px",borderRadius:20,border:"1px solid #7F77DD66",background:"#7F77DD18",color:"#7F77DD",fontSize:12,cursor:"pointer",fontWeight:500}}>Valider</button>
+        </div>
+      )}
+      {/* Panel bonus XP libre */}
+      {showFreeBonus && (
+        <div style={{marginTop:8,paddingTop:8,borderTop:"0.5px solid "+THEME.accentGreen+"44"}}>
+          <div style={{fontSize:11,color:THEME.accentGreen,fontWeight:600,marginBottom:8}}>Ajouter un XP oublié</div>
+          {!freeBonusConfirm ? (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {skills.map(function(sk) {
+                  var active = freeBonusSkill === sk.id;
+                  return (
+                    <button key={sk.id} onClick={function() { setFreeBonusSkill(sk.id); }} style={{fontSize:11,padding:"3px 10px",borderRadius:20,cursor:"pointer",border:active?"1px solid "+sk.color:"1px solid "+THEME.border,background:active?sk.color+"22":THEME.surfaceLight,color:active?sk.color:THEME.textMuted,fontWeight:active?600:400}}>
+                      {sk.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{fontSize:11,color:THEME.textMuted,flexShrink:0}}>XP :</span>
+                <input
+                  type="number" min={1} max={200} value={freeBonusXp}
+                  onChange={function(e) { setFreeBonusXp(Math.max(1, Math.min(200, Number(e.target.value)))); }}
+                  style={{width:70,padding:"4px 8px",borderRadius:8,fontSize:13,fontWeight:600,border:"1px solid "+THEME.accentGreen+"44",background:THEME.inputBg,color:THEME.text,textAlign:"center"}}
+                />
+                <button
+                  onClick={function() { if (freeBonusSkill) setFreeBonusConfirm(true); }}
+                  disabled={!freeBonusSkill}
+                  style={{flex:1,padding:"5px 12px",borderRadius:20,border:"1px solid "+THEME.accentGreen+"66",background:THEME.accentGreen+"18",color:THEME.accentGreen,fontSize:12,cursor:"pointer",fontWeight:500,opacity:freeBonusSkill?1:0.4}}>
+                  Continuer →
+                </button>
+                <button onClick={function() { setShowFreeBonus(false); setFreeBonusConfirm(false); }} style={{padding:"5px 10px",borderRadius:20,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:11,cursor:"pointer"}}>Annuler</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{padding:"10px 12px",borderRadius:10,background:THEME.accentGreen+"10",border:"1px solid "+THEME.accentGreen+"33"}}>
+                {(function() {
+                  var sk = skills.find(function(s) { return s.id === freeBonusSkill; });
+                  return (
+                    <div style={{fontSize:12,color:THEME.text,lineHeight:1.6}}>
+                      Tu vas ajouter <span style={{fontWeight:700,color:THEME.accentGreen}}>+{freeBonusXp} XP</span> en <span style={{fontWeight:600,color:sk?sk.color:THEME.accent}}>{sk?sk.name:"?"}</span> à cette session.<br/>
+                      <span style={{fontSize:11,color:THEME.textMuted}}>Cette action est irréversible (sauf via ↩ annuler la session).</span>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                <button
+                  onClick={function() {
+                    var sk = skills.find(function(s) { return s.id === freeBonusSkill; });
+                    if (!sk) return;
+                    onAddBonus(entry.id, [{rewardIndex:-1, skillId:freeBonusSkill, xp:freeBonusXp}]);
+                    setShowFreeBonus(false);
+                    setFreeBonusConfirm(false);
+                    setFreeBonusXp(10);
+                  }}
+                  style={{flex:1,padding:"6px 12px",borderRadius:20,border:"1px solid "+THEME.accentGreen+"66",background:THEME.accentGreen,color:"#fff",fontSize:12,cursor:"pointer",fontWeight:600}}>
+                  ✓ Confirmer
+                </button>
+                <button onClick={function() { setFreeBonusConfirm(false); }} style={{padding:"6px 12px",borderRadius:20,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:12,cursor:"pointer"}}>
+                  ← Modifier
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -7089,45 +7163,89 @@ onClose, onReset }) {
 
 // --- PROJECT CARD ---
 function DIY_ProjectCard({
-project, hobbies, onClick }) {
+project, hobbies, onClick, onToggleHighlight }) {
   var hobby = hobbies.find(function(h) { return h.id === project.hobby; }) || { emoji: "✦", label: project.hobby };
   var sm = DIY_STATUS_META[project.status];
   var diff = project.difficulty;
   var dc = diff ? DIFF_COLORS[diff] : null;
   var leftColor = { wishlist: T.accentViolet, inprogress: T.accent, done: T.accentGreen }[project.status] || T.accent;
   var noteCount = (project.notes || []).length;
+  var highlighted = !!project.highlighted;
+
+  // Calcul urgence deadline
+  var daysLeft = null;
+  var isUrgent = false;
+  if (project.deadline) {
+    var dl = new Date(project.deadline);
+    var today = new Date(); today.setHours(0,0,0,0);
+    daysLeft = Math.ceil((dl - today) / 86400000);
+    isUrgent = daysLeft !== null && daysLeft <= 7 && project.status !== "done";
+  }
+
+  var cardBorder = highlighted
+    ? "1px solid " + T.accentGold + "88"
+    : isUrgent ? "1px solid " + T.danger + "55"
+    : "1px solid " + T.border;
+  var cardBg = highlighted
+    ? T.surfaceCard + " linear-gradient(135deg," + T.accentGold + "08," + T.surfaceCard + ")"
+    : T.surfaceCard;
 
   return (
-    <div onClick={onClick} style={{
-      background: T.surfaceCard, border: "1px solid " + T.border,
-      borderLeft: "3px solid " + leftColor, borderRadius: 14, padding: "14px 14px 12px",
-      cursor: "pointer", transition: "all 0.18s", display: "flex", flexDirection: "column", gap: 9,
-    }}
-      onMouseEnter={function(e) { e.currentTarget.style.border = "1px solid " + T.borderLight; e.currentTarget.style.borderLeft = "3px solid " + leftColor; e.currentTarget.style.transform = "translateY(-1px)"; }}
-      onMouseLeave={function(e) { e.currentTarget.style.border = "1px solid " + T.border; e.currentTarget.style.borderLeft = "3px solid " + leftColor; e.currentTarget.style.transform = "translateY(0)"; }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{project.name}</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{hobby.emoji} {hobby.label}</div>
-        </div>
-        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: sm.bg, color: sm.color, border: "1px solid " + sm.color + "33", flexShrink: 0, whiteSpace: "nowrap" }}>{sm.label}</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {diff && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: dc.bg, color: dc.text, border: "1px solid " + dc.border }}>{diff}</span>}
-        {project.deadline && <span style={{ fontSize: 10, color: T.accentViolet }}>📅 {DIY_fmtDate(project.deadline)}</span>}
-        {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount} note{noteCount > 1 ? "s" : ""}</span>}
-        {project.photo && <span style={{ fontSize: 10, color: T.accentGreen }}>📷</span>}
-        <span style={{ marginLeft: "auto", fontSize: 11, color: T.accent, fontWeight: 600 }}>{project.xp} XP</span>
-      </div>
-      {(project.tags || []).length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-          {(project.tags || []).map(function(t) {
-            return <span key={t} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: T.accentViolet + "15", color: T.accentViolet, border: "1px solid " + T.accentViolet + "33" }}>#{t}</span>;
-          })}
-        </div>
+    <div style={{ position: "relative" }}>
+      {/* Bouton highlight */}
+      {onToggleHighlight && (
+        <button
+          onClick={function(e) { e.stopPropagation(); onToggleHighlight(project.id); }}
+          title={highlighted ? "Retirer du highlight" : "Mettre en avant"}
+          style={{
+            position: "absolute", top: 8, right: 8, zIndex: 2,
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: 16, lineHeight: 1, padding: "2px",
+            opacity: highlighted ? 1 : 0.3, transition: "opacity 0.15s, transform 0.15s",
+            filter: highlighted ? "drop-shadow(0 0 4px " + T.accentGold + ")" : "none",
+          }}
+          onMouseEnter={function(e) { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1.2)"; }}
+          onMouseLeave={function(e) { e.currentTarget.style.opacity = highlighted ? "1" : "0.3"; e.currentTarget.style.transform = "scale(1)"; }}
+        >⭐</button>
       )}
-      <DIY_XpBar current={project.xp} total={XP_DONE_MAX[project.difficulty||""]}/>
+      <div onClick={onClick} style={{
+        background: cardBg,
+        border: cardBorder,
+        borderLeft: "3px solid " + (highlighted ? T.accentGold : leftColor),
+        borderRadius: 14, padding: "14px 36px 12px 14px",
+        cursor: "pointer", transition: "all 0.18s", display: "flex", flexDirection: "column", gap: 9,
+        boxShadow: highlighted ? "0 2px 12px " + T.accentGold + "22" : "none",
+      }}
+        onMouseEnter={function(e) { e.currentTarget.style.borderColor = T.borderLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+        onMouseLeave={function(e) { e.currentTarget.style.borderColor = highlighted ? T.accentGold+"88" : isUrgent ? T.danger+"55" : T.border; e.currentTarget.style.transform = "translateY(0)"; }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{project.name}</div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{hobby.emoji} {hobby.label}</div>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: sm.bg, color: sm.color, border: "1px solid " + sm.color + "33", flexShrink: 0, whiteSpace: "nowrap" }}>{sm.label}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {diff && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: dc.bg, color: dc.text, border: "1px solid " + dc.border }}>{diff}</span>}
+          {project.deadline && (
+            <span style={{ fontSize: 10, fontWeight: isUrgent ? 600 : 400, color: isUrgent ? T.danger : T.accentViolet, background: isUrgent ? T.danger+"12" : "transparent", borderRadius: 20, padding: isUrgent ? "1px 7px" : "0" }}>
+              {isUrgent ? (daysLeft === 0 ? "⚡ Aujourd'hui !" : daysLeft < 0 ? "⚠ "+Math.abs(daysLeft)+"j de retard" : "⏰ "+daysLeft+"j restants") : "📅 "+DIY_fmtDate(project.deadline)}
+            </span>
+          )}
+          {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount} note{noteCount > 1 ? "s" : ""}</span>}
+          {project.photo && <span style={{ fontSize: 10, color: T.accentGreen }}>📷</span>}
+          <span style={{ marginLeft: "auto", fontSize: 11, color: T.accent, fontWeight: 600 }}>{project.xp} XP</span>
+        </div>
+        {(project.tags || []).length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {(project.tags || []).map(function(t) {
+              return <span key={t} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: T.accentViolet + "15", color: T.accentViolet, border: "1px solid " + T.accentViolet + "33" }}>#{t}</span>;
+            })}
+          </div>
+        )}
+        <DIY_XpBar current={project.xp} total={XP_DONE_MAX[project.difficulty||""]}/>
+      </div>
     </div>
   );
 }
@@ -7435,6 +7553,16 @@ function DiyTrackerApp(props) {
     showToast("Hobby supprimé.");
   }
 
+  function toggleHighlight(id) {
+    setData(function(d) {
+      return Object.assign({}, d, {
+        projects: d.projects.map(function(p) {
+          return p.id === id ? Object.assign({}, p, { highlighted: !p.highlighted }) : p;
+        })
+      });
+    });
+  }
+
   function doReset() {
     setData(function(current) {
       var hobbies = current && current.hobbies && current.hobbies.length > 0
@@ -7684,9 +7812,45 @@ function DiyTrackerApp(props) {
                   )}
                 </div>
               )}
-              {filteredProjects.map(function(p) {
-                return <DIY_ProjectCard key={p.id} project={p} hobbies={data.hobbies} onClick={function() { setDetailProject(p); }}/>;
-              })}
+              {filteredProjects.length > 0 && (function() {
+                var today = new Date(); today.setHours(0,0,0,0);
+                function isUrgent(p) {
+                  if (!p.deadline || p.status === "done") return false;
+                  var dl = new Date(p.deadline);
+                  var d = Math.ceil((dl - today) / 86400000);
+                  return d <= 7;
+                }
+                var featured = filteredProjects.filter(function(p) { return p.highlighted || isUrgent(p); });
+                var regular = filteredProjects.filter(function(p) { return !p.highlighted && !isUrgent(p); });
+                return (
+                  <React.Fragment>
+                    {featured.length > 0 && (
+                      <div style={{ marginBottom: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: T.accentGold, letterSpacing: "0.5px" }}>⭐ À LA UNE</span>
+                          <div style={{ flex: 1, height: 1, background: T.accentGold + "33" }}/>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {featured.map(function(p) {
+                            return <DIY_ProjectCard key={p.id} project={p} hobbies={data.hobbies} onClick={function() { setDetailProject(p); }} onToggleHighlight={toggleHighlight}/>;
+                          })}
+                        </div>
+                        {regular.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "14px 0 8px" }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, letterSpacing: "0.5px" }}>TOUS LES PROJETS</span>
+                            <div style={{ flex: 1, height: 1, background: T.border }}/>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {regular.map(function(p) {
+                        return <DIY_ProjectCard key={p.id} project={p} hobbies={data.hobbies} onClick={function() { setDetailProject(p); }} onToggleHighlight={toggleHighlight}/>;
+                      })}
+                    </div>
+                  </React.Fragment>
+                );
+              })()}
 
               <button onClick={function() { setShowAddHobby(true); }} style={{ background: "none", border: "1px dashed " + T.accentViolet + "55", borderRadius: 12, padding: "10px", fontSize: 12, color: T.accentViolet, cursor: "pointer", width: "100%", marginTop: 4 }}>
                 + Ajouter un nouveau hobby
