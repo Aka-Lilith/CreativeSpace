@@ -4234,6 +4234,8 @@ function ArtTrackerApp(props) {
   const [toast,          setToast]          = useState(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [page,           setPage]           = useState("tracker");
+  const [histFilterSkill, setHistFilterSkill] = useState(null);
+  const [histFilterMonth, setHistFilterMonth] = useState(null);
 
   // Migration : ajoute les compétences par défaut manquantes sans toucher aux données existantes
   function migrateSkills(savedSkills) {
@@ -4472,7 +4474,7 @@ function ArtTrackerApp(props) {
     task.rewards.filter(function(r) { return !r.optional; }).forEach(function(r) { gains.push({skillId:r.skillId,xp:r.xp}); });
     optional.forEach(function(r,i) { if(checkedOpts[i]) { gains.push({skillId:r.skillId,xp:r.xp}); claimed.push(task.rewards.indexOf(r)); } });
     applyXp(gains);
-    var gl = gains.map(function(g) { var sk=skills.find(function(s) { return s.id===g.skillId; }); return sk?{name:sk.name,xp:g.xp,color:sk.color}:null; }).filter(Boolean);
+    var gl = gains.map(function(g) { var sk=skills.find(function(s) { return s.id===g.skillId; }); return sk?{skillId:sk.id,name:sk.name,xp:g.xp,color:sk.color}:null; }).filter(Boolean);
     var entry = {id:Date.now(),taskId:task.id,taskName:task.name,theme:task.theme,date:new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),gains:gl,claimedOptionals:claimed,note:note||""};
     setHistory(function(prev) { return [entry,...prev]; });
     setCC(function(prev) { return {...prev,[task.id]:(prev[task.id]||0)+1}; });
@@ -4485,7 +4487,8 @@ function ArtTrackerApp(props) {
     // Retirer l'XP des gains de cette entrée
     if (entry.gains && entry.gains.length>0) {
       var gains = entry.gains.map(function(g) {
-        var sk = skills.find(function(s) { return s.name===g.name; });
+        var sk = skills.find(function(s) { return s.id===g.skillId; })
+               || skills.find(function(s) { return s.name===g.name; });
         return sk ? {skillId:sk.id, xp:g.xp} : null;
       }).filter(Boolean);
       if (gains.length>0) removeXp(gains);
@@ -4500,7 +4503,7 @@ function ArtTrackerApp(props) {
     setHistory(function(prev) {
       return prev.map(function(e) {
         if (e.id!==entryId) return e;
-        var ng = [...e.gains,...toAdd.map(function(a) { var sk=skills.find(function(s) { return s.id===a.skillId; }); return sk?{name:sk.name,xp:a.xp,color:sk.color}:null; }).filter(Boolean)];
+        var ng = [...e.gains,...toAdd.map(function(a) { var sk=skills.find(function(s) { return s.id===a.skillId; }); return sk?{skillId:sk.id,name:sk.name,xp:a.xp,color:sk.color}:null; }).filter(Boolean)];
         return {...e,gains:ng,claimedOptionals:[...(e.claimedOptionals||[]),...toAdd.map(function(a) { return a.rewardIndex; })]};
       });
     });
@@ -4617,7 +4620,7 @@ function ArtTrackerApp(props) {
     if (data.gains && data.gains.length>0) applyXp(data.gains);
     var gl = (data.gains||[]).map(function(g) {
       var sk = skills.find(function(s) { return s.id===g.skillId; });
-      return sk ? {name:sk.name, xp:g.xp, color:sk.color} : null;
+      return sk ? {skillId:sk.id, name:sk.name, xp:g.xp, color:sk.color} : null;
     }).filter(Boolean);
     var entry = {
       id: Date.now(),
@@ -4893,6 +4896,8 @@ function ArtTrackerApp(props) {
                 reader.onload = function(ev) {
                   try {
                     var d = JSON.parse(ev.target.result);
+                    if (!d.skills && !d.tasks && !d.history) { showToast("❌ Fichier invalide"); return; }
+                    if (!window.confirm("⚠️ Importer ce fichier va remplacer toutes tes données actuelles (compétences, tâches, historique…). Continuer ?")) return;
                     if (d.skills) setSkills(migrateSkills(d.skills));
                     if (d.tasks) setTasks(migrateTasks(d.tasks));
                     if (d.themes) { var mt = migrateThemes(d.themes); setThemes(mt); storage.set(THEMES_KEY, mt); }
@@ -5179,15 +5184,44 @@ function ArtTrackerApp(props) {
 
           {/* Historique */}
           <div style={block}>
-            <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:8}}>
               📜 Historique ({history.length} entrées)
             </div>
+            {/* Filtres */}
+            {history.length > 0 && (function() {
+              var months = [];
+              history.forEach(function(e) {
+                var m = e.date ? e.date.slice(3,10) : null; // "MM/YYYY"
+                if (m && !months.includes(m)) months.push(m);
+              });
+              return (
+                <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
+                  <button onClick={function() { setHistFilterSkill(null); setHistFilterMonth(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+THEME.border,background:(!histFilterSkill&&!histFilterMonth)?THEME.accent:THEME.surfaceLight,color:(!histFilterSkill&&!histFilterMonth)?"#fff":THEME.textMuted,cursor:"pointer",fontWeight:(!histFilterSkill&&!histFilterMonth)?600:400}}>Tout</button>
+                  {(skills||[]).map(function(sk) {
+                    var active = histFilterSkill===sk.id;
+                    return <button key={sk.id} onClick={function() { setHistFilterSkill(active?null:sk.id); setHistFilterMonth(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+(active?sk.color:THEME.border),background:active?sk.color+"22":THEME.surfaceLight,color:active?sk.color:THEME.textMuted,cursor:"pointer",fontWeight:active?600:400}}>{sk.name}</button>;
+                  })}
+                  {months.map(function(m) {
+                    var active = histFilterMonth===m;
+                    return <button key={m} onClick={function() { setHistFilterMonth(active?null:m); setHistFilterSkill(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+(active?THEME.accent:THEME.border),background:active?THEME.accent+"22":THEME.surfaceLight,color:active?THEME.accent:THEME.textMuted,cursor:"pointer",fontWeight:active?600:400}}>📅 {m}</button>;
+                  })}
+                </div>
+              );
+            })()}
             <div style={{maxHeight:300,overflowY:"auto",display:"flex",flexDirection:"column",gap:7,paddingRight:2}}>
               {history.length===0 && <div style={{color:THEME.textMuted,fontSize:13}}>Aucune tâche complétée.</div>}
-              {history.map(function(entry) {
-                var task = (tasks||[]).find(function(t) { return t.id===entry.taskId; });
-                return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}}/>;
-              })}
+              {(function() {
+                var filtered = history.filter(function(e) {
+                  if (histFilterSkill) return (e.gains||[]).some(function(g) { return g.skillId===histFilterSkill || (skills||[]).find(function(s){return s.id===histFilterSkill&&s.name===g.name;}); });
+                  if (histFilterMonth) return e.date && e.date.slice(3,10)===histFilterMonth;
+                  return true;
+                });
+                if (filtered.length===0) return <div style={{color:THEME.textMuted,fontSize:13}}>Aucune entrée pour ce filtre.</div>;
+                return filtered.map(function(entry) {
+                  var task = (tasks||[]).find(function(t) { return t.id===entry.taskId; });
+                  return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}}/>;
+                });
+              })()}
             </div>
           </div>
 
@@ -7235,6 +7269,12 @@ project, hobbies, onClick, onToggleHighlight }) {
           )}
           {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount} note{noteCount > 1 ? "s" : ""}</span>}
           {project.photo && <span style={{ fontSize: 10, color: T.accentGreen }}>📷</span>}
+          {(function() {
+            var mins = (project.timeSpent||[]).reduce(function(s,t){ return s+(t.minutes||0); }, 0);
+            if (mins < 1) return null;
+            var h = Math.floor(mins/60), m = mins%60;
+            return <span style={{ fontSize: 10, color: T.accentViolet }}>⏱ {h>0?h+"h":""}{m>0?m+"m":""}</span>;
+          })()}
           <span style={{ marginLeft: "auto", fontSize: 11, color: T.accent, fontWeight: 600 }}>{project.xp} XP</span>
         </div>
         {(project.tags || []).length > 0 && (
@@ -7528,6 +7568,7 @@ function DiyTrackerApp(props) {
       try {
         var d = JSON.parse(ev.target.result);
         if (d.projects) {
+          if (!window.confirm("⚠️ Importer ce fichier va remplacer tous tes projets et hobbies actuels. Continuer ?")) return;
           setData(function(cur) {
             return Object.assign({}, cur, {
               projects: d.projects,
@@ -7678,11 +7719,29 @@ function DiyTrackerApp(props) {
           <div style={{ margin: "10px 16px 0", background: T.surfaceCard, border: "1px solid " + T.borderLight, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12, animation: "fadeUp 0.3s ease both" }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: T.textSub }}>Hobbies</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {data.hobbies.map(function(h) {
+              {data.hobbies.map(function(h, idx) {
                 var usedCount = data.projects.filter(function(p) { return p.hobby === h.id; }).length;
                 var isDefault = DEFAULT_HOBBIES.some(function(dh) { return dh.id === h.id; });
                 return (
                   <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceLight, border: "1px solid " + T.border }}>
+                    <div style={{ display:"flex", flexDirection:"column", gap:1, flexShrink:0 }}>
+                      <button onClick={function() {
+                        setData(function(d) {
+                          var arr = d.hobbies.slice();
+                          if (idx===0) return d;
+                          var tmp=arr[idx-1]; arr[idx-1]=arr[idx]; arr[idx]=tmp;
+                          return Object.assign({},d,{hobbies:arr});
+                        });
+                      }} disabled={idx===0} style={{ border:"none", background:"none", cursor:idx===0?"default":"pointer", color:idx===0?T.border:T.textMuted, fontSize:10, padding:"1px 3px", lineHeight:1, opacity:idx===0?0.3:1 }}>▲</button>
+                      <button onClick={function() {
+                        setData(function(d) {
+                          var arr = d.hobbies.slice();
+                          if (idx===d.hobbies.length-1) return d;
+                          var tmp=arr[idx+1]; arr[idx+1]=arr[idx]; arr[idx]=tmp;
+                          return Object.assign({},d,{hobbies:arr});
+                        });
+                      }} disabled={idx===data.hobbies.length-1} style={{ border:"none", background:"none", cursor:idx===data.hobbies.length-1?"default":"pointer", color:idx===data.hobbies.length-1?T.border:T.textMuted, fontSize:10, padding:"1px 3px", lineHeight:1, opacity:idx===data.hobbies.length-1?0.3:1 }}>▼</button>
+                    </div>
                     <span style={{ fontSize: 18, flexShrink: 0 }}>{h.emoji}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{h.label}</div>
@@ -9025,6 +9084,7 @@ function ExportImportModal({ data, onClose, onImport }) {
       var parsed = JSON.parse(importText);
       if (!parsed.entries || !Array.isArray(parsed.entries)) throw new Error("Format invalide");
       if (!parsed.goals) parsed.goals = Object.assign({}, DEFAULT_GOALS);
+      if (!window.confirm("⚠️ Importer ce fichier va remplacer toutes tes fiches et données actuelles. Continuer ?")) return;
       onImport(parsed);
     } catch(e) {
       setImportError("Fichier invalide : " + e.message);
@@ -9244,9 +9304,32 @@ function WorldbuildingModule({ onHome }) {
 
   function showToast(msg) { setToast(msg); setTimeout(function() { setToast(null); }, 2200); }
 
+  function syncBidirectionalRelations(entries, updatedEntry) {
+    // Pour chaque relation dans la fiche mise à jour, s'assurer que la cible a la relation inverse
+    return entries.map(function(e) {
+      if (e.id === updatedEntry.id) return updatedEntry;
+      var incomingRels = (updatedEntry.relations||[]).filter(function(r) { return r.name === e.name; });
+      if (incomingRels.length === 0) {
+        // Retirer les relations qui pointaient vers updatedEntry si elles ont été supprimées
+        return Object.assign({}, e, {
+          relations: (e.relations||[]).filter(function(r) { return r.name !== updatedEntry.name; })
+        });
+      }
+      // Ajouter/mettre à jour la relation inverse
+      var existingRels = (e.relations||[]).filter(function(r) { return r.name !== updatedEntry.name; });
+      var newRels = incomingRels.map(function(r) {
+        return WB_normRelation({ name: updatedEntry.name, type: r.type, note: r.note || "" });
+      });
+      return Object.assign({}, e, { relations: existingRels.concat(newRels) });
+    });
+  }
+
   function addEntry(entryData) {
     setData(function(prev) {
-      return Object.assign({}, prev, { entries: prev.entries.concat([Object.assign({}, entryData, { id: prev.nextId })]), nextId: prev.nextId + 1 });
+      var newEntry = Object.assign({}, entryData, { id: prev.nextId });
+      var newEntries = prev.entries.concat([newEntry]);
+      var synced = syncBidirectionalRelations(newEntries, newEntry);
+      return Object.assign({}, prev, { entries: synced, nextId: prev.nextId + 1 });
     });
     setShowAdd(false);
     setCheckBadges(true);
@@ -9255,7 +9338,8 @@ function WorldbuildingModule({ onHome }) {
 
   function updateEntry(entryData) {
     setData(function(prev) {
-      return Object.assign({}, prev, { entries: prev.entries.map(function(e) { return e.id === entryData.id ? entryData : e; }) });
+      var synced = syncBidirectionalRelations(prev.entries, entryData);
+      return Object.assign({}, prev, { entries: synced });
     });
     setEditEntry(null);
     setDetail(entryData);
