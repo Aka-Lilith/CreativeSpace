@@ -5370,6 +5370,7 @@ var MODULES = [
     desc: "Suis ta progression, gagne de l'XP et développe tes compétences artistiques.",
     color: "#7F77DD",
     gradient: "linear-gradient(135deg,#fde8f0,#f3e8fd)",
+    darkGradient: "linear-gradient(135deg,rgba(80,55,120,0.5),rgba(50,35,80,0.5))",
     status: "active",
   },
   {
@@ -5379,6 +5380,7 @@ var MODULES = [
     desc: "Construis ton univers : personnages, lieux, lore, timeline et illustrations.",
     color: "#1D9E75",
     gradient: "linear-gradient(135deg,#e8fdf0,#e8f4fd)",
+    darkGradient: "linear-gradient(135deg,rgba(20,80,60,0.5),rgba(20,50,70,0.5))",
     status: "active",
   },
   {
@@ -5388,6 +5390,7 @@ var MODULES = [
     desc: "Gère tes projets créatifs manuels : couture, broderie, fabrication et plus.",
     color: "#BA7517",
     gradient: "linear-gradient(135deg,#fef3e2,#fde8f0)",
+    darkGradient: "linear-gradient(135deg,rgba(80,50,15,0.5),rgba(70,35,40,0.5))",
     status: "active",
   },
 ];
@@ -5398,6 +5401,7 @@ var MODULES = [
 // ════════════════════════════════════════════════════════════════
 function DashboardWidget(props) {
   const onOpen = props.onOpen;
+  const isDark = !!props.isDark;
   const [summary, setSummary] = React.useState(null);
 
   React.useEffect(function() {
@@ -5543,6 +5547,12 @@ function DashboardWidget(props) {
 
   var HL = THEMES.light;
 
+  var cardBg     = isDark ? "rgba(40,30,65,0.85)"  : "rgba(255,255,255,0.75)";
+  var cardBorder = isDark ? "rgba(180,140,255,0.18)" : "rgba(160,130,210,0.2)";
+  var textMain   = isDark ? "#EDE8FF" : "#2D2440";
+  var textMuted  = isDark ? "#7A6E99" : "#9080B0";
+  var titleColor = isDark ? "#A78BFA" : "#9080B0";
+
   // Statut XP
   var xpStatus = "safe";
   if (summary.daysSinceLast !== null) {
@@ -5558,10 +5568,9 @@ function DashboardWidget(props) {
     decay:   "XP en déclin",
   };
 
-  return (
     <div style={{width:"100%",maxWidth:440,zIndex:1,animation:"fadeUp 0.6s ease 0.05s both"}}>
       {/* Titre widget */}
-      <div style={{fontSize:11,color:"#9080B0",fontWeight:600,letterSpacing:1,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>
+      <div style={{fontSize:11,color:titleColor,fontWeight:600,letterSpacing:1,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>
         ✦ Résumé du jour
       </div>
 
@@ -5570,25 +5579,20 @@ function DashboardWidget(props) {
         {/* Ligne 1 — Streak + Niveau + Heures */}
         {summary.trackerHasData && (
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-            {/* Streak */}
-            <div onClick={function(){onOpen("tracker");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(160,130,210,0.2)",borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+            <div onClick={function(){onOpen("tracker");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid "+cardBorder,borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
               <div style={{fontSize:20,marginBottom:2}}>{summary.streak >= 7 ? "🔥" : summary.streak >= 3 ? "✨" : "🌙"}</div>
-              <div style={{fontSize:17,fontWeight:700,color:"#2D2440",lineHeight:1}}>{summary.streak}</div>
-              <div style={{fontSize:9,color:"#9080B0",marginTop:2}}>jour{summary.streak > 1 ? "s" : ""} streak</div>
+              <div style={{fontSize:17,fontWeight:700,color:textMain,lineHeight:1}}>{summary.streak}</div>
+              <div style={{fontSize:9,color:textMuted,marginTop:2}}>jour{summary.streak > 1 ? "s" : ""} streak</div>
             </div>
-
-            {/* Niveau global */}
-            <div onClick={function(){onOpen("tracker");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(160,130,210,0.2)",borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+            <div onClick={function(){onOpen("tracker");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid "+cardBorder,borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
               <div style={{fontSize:20,marginBottom:2}}>⭐</div>
-              <div style={{fontSize:17,fontWeight:700,color:"#2D2440",lineHeight:1}}>Niv. {summary.globalLevel}</div>
-              <div style={{fontSize:9,color:"#9080B0",marginTop:2}}>{summary.globalXp}/{XP_PER_LEVEL} XP moy.</div>
+              <div style={{fontSize:17,fontWeight:700,color:textMain,lineHeight:1}}>Niv. {summary.globalLevel}</div>
+              <div style={{fontSize:9,color:textMuted,marginTop:2}}>{summary.globalXp}/{XP_PER_LEVEL} XP moy.</div>
             </div>
-
-            {/* Heures */}
-            <div onClick={function(){onOpen("tracker");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(160,130,210,0.2)",borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+            <div onClick={function(){onOpen("tracker");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid "+cardBorder,borderRadius:16,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
               <div style={{fontSize:20,marginBottom:2}}>⏱</div>
-              <div style={{fontSize:17,fontWeight:700,color:"#2D2440",lineHeight:1}}>{summary.totalHours}h</div>
-              <div style={{fontSize:9,color:"#9080B0",marginTop:2}}>dessinées</div>
+              <div style={{fontSize:17,fontWeight:700,color:textMain,lineHeight:1}}>{summary.totalHours}h</div>
+              <div style={{fontSize:9,color:textMuted,marginTop:2}}>dessinées</div>
             </div>
           </div>
         )}
@@ -5596,32 +5600,27 @@ function DashboardWidget(props) {
         {/* Ligne 2 — Statut XP + badge proche */}
         {summary.trackerHasData && summary.daysSinceLast !== null && (
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {/* Statut XP */}
-            <div style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid "+xpColors[xpStatus]+"33",borderRadius:16,padding:"10px 12px",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+            <div style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid "+xpColors[xpStatus]+"33",borderRadius:16,padding:"10px 12px",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
                 <span style={{fontSize:16}}>{xpIcons[xpStatus]}</span>
                 <div>
                   <div style={{fontSize:11,fontWeight:600,color:xpColors[xpStatus],lineHeight:1.2}}>{xpLabels[xpStatus]}</div>
                   {summary.daysSinceLast > 0 && (
-                    <div style={{fontSize:9,color:"#9080B0",marginTop:2}}>
-                      Dernier dessin il y a {summary.daysSinceLast}j
-                    </div>
+                    <div style={{fontSize:9,color:textMuted,marginTop:2}}>Dernier dessin il y a {summary.daysSinceLast}j</div>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Badge proche */}
             {summary.closestBadge && (
-              <div onClick={function(){onOpen("tracker");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(160,130,210,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+              <div onClick={function(){onOpen("tracker");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid "+cardBorder,borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
                   <span style={{fontSize:14}}>{summary.closestBadge.emoji}</span>
-                  <div style={{fontSize:10,fontWeight:600,color:"#2D2440",lineHeight:1.2,flex:1}}>{summary.closestBadge.label}</div>
+                  <div style={{fontSize:10,fontWeight:600,color:textMain,lineHeight:1.2,flex:1}}>{summary.closestBadge.label}</div>
                 </div>
-                <div style={{height:3,background:"rgba(160,130,210,0.15)",borderRadius:99}}>
+                <div style={{height:3,background:isDark?"rgba(180,140,255,0.15)":"rgba(160,130,210,0.15)",borderRadius:99}}>
                   <div style={{height:"100%",width:summary.closestProgress+"%",background:"linear-gradient(90deg,#A78BFA,#7F77DD)",borderRadius:99,transition:"width 0.4s"}}/>
                 </div>
-                <div style={{fontSize:9,color:"#9080B0",marginTop:3}}>{summary.closestProgress}% — prochain badge</div>
+                <div style={{fontSize:9,color:textMuted,marginTop:3}}>{summary.closestProgress}% — prochain badge</div>
               </div>
             )}
           </div>
@@ -5629,11 +5628,11 @@ function DashboardWidget(props) {
 
         {/* Ligne 3 — Projet Tracker actif */}
         {summary.activeProject && (
-          <div onClick={function(){onOpen("tracker");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(127,119,221,0.25)",borderRadius:16,padding:"10px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+          <div onClick={function(){onOpen("tracker");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid rgba(127,119,221,0.25)",borderRadius:16,padding:"10px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
             <span style={{fontSize:18,flexShrink:0}}>🗂</span>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:11,color:"#7F77DD",fontWeight:600,marginBottom:1}}>Projet en cours — Tracker</div>
-              <div style={{fontSize:12,fontWeight:600,color:"#2D2440",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{summary.activeProject.name}</div>
+              <div style={{fontSize:12,fontWeight:600,color:textMain,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{summary.activeProject.name}</div>
               {summary.activeProject.steps && summary.activeProject.steps.length > 0 && (function() {
                 var done = summary.activeProject.steps.filter(function(s){return s.done;}).length;
                 var total = summary.activeProject.steps.length;
@@ -5643,7 +5642,7 @@ function DashboardWidget(props) {
                     <div style={{height:3,background:"rgba(127,119,221,0.15)",borderRadius:99}}>
                       <div style={{height:"100%",width:pct+"%",background:"#7F77DD",borderRadius:99}}/>
                     </div>
-                    <div style={{fontSize:9,color:"#9080B0",marginTop:2}}>{done}/{total} étapes · {pct}%</div>
+                    <div style={{fontSize:9,color:textMuted,marginTop:2}}>{done}/{total} étapes · {pct}%</div>
                   </div>
                 );
               })()}
@@ -5652,25 +5651,22 @@ function DashboardWidget(props) {
           </div>
         )}
 
-        {/* Ligne 4 — DIY + WB côte à côte */}
+        {/* Ligne 4 — DIY + WB */}
         {(summary.diyTotal > 0 || summary.wbEntries > 0) && (
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {/* DIY */}
             {summary.diyTotal > 0 && (
-              <div onClick={function(){onOpen("diy");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(186,117,23,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+              <div onClick={function(){onOpen("diy");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid rgba(186,117,23,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
                 <div style={{fontSize:16,marginBottom:4}}>🔧</div>
-                <div style={{fontSize:11,fontWeight:600,color:"#2D2440",marginBottom:2}}>DIY Projects</div>
-                <div style={{fontSize:10,color:"#9080B0"}}>{summary.diyActive.length} en cours</div>
+                <div style={{fontSize:11,fontWeight:600,color:textMain,marginBottom:2}}>DIY Projects</div>
+                <div style={{fontSize:10,color:textMuted}}>{summary.diyActive.length} en cours</div>
                 <div style={{fontSize:10,color:"#1D9E75"}}>{summary.diyDone} terminés ✓</div>
               </div>
             )}
-
-            {/* Worldbuilding */}
             {summary.wbEntries > 0 && (
-              <div onClick={function(){onOpen("worldbuilding");}} style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid rgba(29,158,117,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
+              <div onClick={function(){onOpen("worldbuilding");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid rgba(29,158,117,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
                 <div style={{fontSize:16,marginBottom:4}}>🌍</div>
-                <div style={{fontSize:11,fontWeight:600,color:"#2D2440",marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{summary.wbName}</div>
-                <div style={{fontSize:10,color:"#9080B0"}}>{summary.wbEntries} fiche{summary.wbEntries > 1 ? "s" : ""}</div>
+                <div style={{fontSize:11,fontWeight:600,color:textMain,marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{summary.wbName}</div>
+                <div style={{fontSize:10,color:textMuted}}>{summary.wbEntries} fiche{summary.wbEntries > 1 ? "s" : ""}</div>
                 <div style={{fontSize:10,color:"#1D9E75"}}>{summary.wbCompletion}% complété</div>
               </div>
             )}
@@ -5684,13 +5680,25 @@ function DashboardWidget(props) {
 
 // --- HOME SCREEN ---
 function HomeScreen(props) {
-  const onOpen     = props.onOpen;
-  const onSignOut  = props.onSignOut;
-  const userEmail  = props.userEmail;
+  const onOpen          = props.onOpen;
+  const onSignOut       = props.onSignOut;
+  const userEmail       = props.userEmail;
+  const themeMode       = props.themeMode || "light";
+  const onToggleTheme   = props.onToggleTheme;
 
-  // Thème clair par défaut pour l'accueil
-  var HL = THEMES.light;
-  var bg = HL.bgGradient;
+  var isDark = themeMode === "dark";
+  var HL = {
+    bg:       isDark ? "linear-gradient(160deg,#1A1428 0%,#0F1A1F 50%,#161020 100%)" : THEMES.light.bgGradient,
+    text:     isDark ? "#EDE8FF" : "#2D2440",
+    sub:      isDark ? "#C4A8FF" : "#7C5CBF",
+    muted:    isDark ? "#7A6E99" : "#9080B0",
+    card:     isDark ? "rgba(40,32,60,0.85)" : "rgba(255,255,255,0.75)",
+    cardBorder: isDark ? "rgba(180,140,255,0.18)" : "rgba(160,130,210,0.25)",
+    iconBg:   isDark ? "rgba(60,46,90,0.8)" : "rgba(255,255,255,0.9)",
+    userBg:   isDark ? "rgba(40,30,60,0.85)" : "rgba(255,255,255,0.7)",
+    userBorder: isDark ? "#3D2A6E" : "#E9D5FF",
+    dot:      isDark ? 0.6 : 0.4,
+  };
 
   function Mushroom({color}) {
     return (
@@ -5708,7 +5716,7 @@ function HomeScreen(props) {
     return (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="14" fill="#FCD34D" opacity="0.85"/>
-        <circle cx="22" cy="10" r="10" fill={bg.includes("FAF7") ? "#FAF7FF" : "#EDE0FF"} opacity="0.9"/>
+        <circle cx="22" cy="10" r="10" fill={isDark ? "#1A1428" : "#FAF7FF"} opacity="0.9"/>
         <circle cx="8" cy="22" r="2" fill="#FCD34D" opacity="0.4"/>
       </svg>
     );
@@ -5724,7 +5732,7 @@ function HomeScreen(props) {
   }
 
   return (
-    <div style={{minHeight:"100vh",background:bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"4.5rem 1.2rem 2rem",gap:20,position:"relative",overflow:"hidden"}}>
+    <div style={{minHeight:"100vh",background:HL.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"4.5rem 1.2rem 2rem",gap:20,position:"relative",overflow:"hidden"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
         * { font-family: 'Inter', sans-serif; }
@@ -5740,7 +5748,7 @@ function HomeScreen(props) {
       {/* Petits points décoratifs */}
       {[[8,12],[88,20],[15,75],[80,65],[45,8],[92,82],[30,92],[65,38]].map(function(pos,i) {
         var colors = ["#A78BFA","#6EE7B7","#F9A8D4","#FCD34D"];
-        return <div key={i} style={{position:"absolute",left:pos[0]+"%",top:pos[1]+"%",width:3,height:3,borderRadius:"50%",background:colors[i%4],opacity:0.4,animation:"twinkle "+(2+i*0.4)+"s ease-in-out infinite",animationDelay:i*0.3+"s"}}/>;
+        return <div key={i} style={{position:"absolute",left:pos[0]+"%",top:pos[1]+"%",width:3,height:3,borderRadius:"50%",background:colors[i%4],opacity:HL.dot,animation:"twinkle "+(2+i*0.4)+"s ease-in-out infinite",animationDelay:i*0.3+"s"}}/>;
       })}
 
       {/* Motifs flottants */}
@@ -5750,19 +5758,26 @@ function HomeScreen(props) {
       <div style={{position:"absolute",bottom:"18%",right:"4%",animation:"float2 5.5s ease-in-out infinite",animationDelay:"0.5s"}}><Mushroom color="#F9A8D4"/></div>
       <div style={{position:"absolute",top:"45%",left:"2%",animation:"float 8s ease-in-out infinite",animationDelay:"2s"}}><Crystal color="#C4A8FF"/></div>
 
+      {/* Toggle thème */}
+      {onToggleTheme && (
+        <button onClick={onToggleTheme} style={{position:"absolute",top:16,left:16,zIndex:10,background:HL.userBg,border:"1px solid "+HL.userBorder,borderRadius:20,padding:"5px 11px",fontSize:15,cursor:"pointer",backdropFilter:"blur(8px)",lineHeight:1}}>
+          {isDark ? "☀️" : "🌙"}
+        </button>
+      )}
+
       {/* User info + déconnexion */}
       {onSignOut && (
         <div style={{position:"absolute",top:16,right:16,display:"flex",alignItems:"center",gap:8,zIndex:10}}>
-          <div style={{fontSize:11,color:"#7C5CBF",background:"rgba(255,255,255,0.7)",border:"1px solid #E9D5FF",borderRadius:20,padding:"4px 10px",backdropFilter:"blur(8px)"}}>☁️ {userEmail}</div>
-          <button onClick={onSignOut} style={{fontSize:11,color:"#9CA3AF",background:"rgba(255,255,255,0.7)",border:"1px solid #E9D5FF",borderRadius:20,padding:"4px 10px",cursor:"pointer",backdropFilter:"blur(8px)"}}>Déconnexion</button>
+          <div style={{fontSize:11,color:HL.sub,background:HL.userBg,border:"1px solid "+HL.userBorder,borderRadius:20,padding:"4px 10px",backdropFilter:"blur(8px)"}}>☁️ {userEmail}</div>
+          <button onClick={onSignOut} style={{fontSize:11,color:HL.muted,background:HL.userBg,border:"1px solid "+HL.userBorder,borderRadius:20,padding:"4px 10px",cursor:"pointer",backdropFilter:"blur(8px)"}}>Déconnexion</button>
         </div>
       )}
 
       {/* Header */}
       <div style={{textAlign:"center",animation:"fadeUp 0.6s ease both",zIndex:1}}>
         <div style={{fontSize:52,marginBottom:10,animation:"float 3.5s ease-in-out infinite"}}>✦</div>
-        <div style={{fontSize:28,fontWeight:700,color:"#2D2440",fontFamily:"'Playfair Display',serif",letterSpacing:-0.5,lineHeight:1.2}}>Lilith's Creative Studio</div>
-        <div style={{fontSize:13,color:"#7C5CBF",marginTop:8,letterSpacing:0.5}}>Choisissez un espace de travail</div>
+        <div style={{fontSize:28,fontWeight:700,color:HL.text,fontFamily:"'Playfair Display',serif",letterSpacing:-0.5,lineHeight:1.2}}>Lilith's Creative Studio</div>
+        <div style={{fontSize:13,color:HL.sub,marginTop:8,letterSpacing:0.5}}>Choisissez un espace de travail</div>
       </div>
 
       {/* Modules */}
@@ -5770,19 +5785,22 @@ function HomeScreen(props) {
         {MODULES.map(function(m, i) {
           var isActive = m.status === "active";
           var glow = m.color || "#7C5CBF";
+          var cardGradient = isDark
+            ? (m.darkGradient || "linear-gradient(135deg,rgba(50,35,80,0.9),rgba(30,45,60,0.9))")
+            : m.gradient;
           return (
             <div key={m.id} className={isActive?"home-card":""} onClick={function() { if(isActive) onOpen(m.id); }}
-              style={{background:m.gradient,borderRadius:20,padding:"1.3rem 1.5rem",border:"1px solid rgba(160,130,210,0.25)",boxShadow:"0 4px 20px rgba(100,70,180,0.08)",opacity:isActive?1:0.55,animation:"fadeUp 0.6s ease "+(0.1+i*0.12)+"s both",display:"flex",alignItems:"center",gap:14}}
+              style={{background:cardGradient,borderRadius:20,padding:"1.3rem 1.5rem",border:"1px solid "+HL.cardBorder,boxShadow:isDark?"0 4px 20px rgba(0,0,0,0.3)":"0 4px 20px rgba(100,70,180,0.08)",opacity:isActive?1:0.55,animation:"fadeUp 0.6s ease "+(0.1+i*0.12)+"s both",display:"flex",alignItems:"center",gap:14}}
             >
-              <div style={{width:52,height:52,borderRadius:14,background:THEME.surfaceCard,border:"1px solid rgba(160,130,210,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>
+              <div style={{width:52,height:52,borderRadius:14,background:HL.iconBg,border:"1px solid "+HL.cardBorder,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>
                 {m.emoji}
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                  <div style={{fontSize:15,fontWeight:600,color:"#2D2440",fontFamily:"'Playfair Display',serif"}}>{m.label}</div>
+                  <div style={{fontSize:15,fontWeight:600,color:HL.text,fontFamily:"'Playfair Display',serif"}}>{m.label}</div>
                   {!isActive && <span style={{fontSize:9,color:glow,background:glow+"15",border:"1px solid "+glow+"33",borderRadius:20,padding:"1px 8px",fontWeight:600,letterSpacing:0.8}}>BIENTÔT</span>}
                 </div>
-                <div style={{fontSize:12,color:"#7C5CBF",lineHeight:1.5}}>{m.desc}</div>
+                <div style={{fontSize:12,color:HL.sub,lineHeight:1.5}}>{m.desc}</div>
               </div>
               {isActive && <div style={{fontSize:18,color:glow,flexShrink:0,opacity:0.7}}>›</div>}
             </div>
@@ -5790,12 +5808,12 @@ function HomeScreen(props) {
         })}
       </div>
 
-      <div style={{fontSize:11,color:"#9080B0",textAlign:"center",animation:"fadeUp 0.6s ease 0.5s both",zIndex:1,letterSpacing:0.5}}>
+      <div style={{fontSize:11,color:HL.muted,textAlign:"center",animation:"fadeUp 0.6s ease 0.5s both",zIndex:1,letterSpacing:0.5}}>
         ✦ D'autres modules arrivent bientôt ✦
       </div>
 
       {/* Widget résumé */}
-      <DashboardWidget onOpen={onOpen}/>
+      <DashboardWidget onOpen={onOpen} isDark={isDark}/>
     </div>
   );
 }
@@ -9768,11 +9786,20 @@ function LoginScreen({ onAuth }) {
 // --- APP ROUTER ---
 function App() {
   const [currentModule, setCurrentModule] = useState(function() {
-    // Restaure le module actif depuis sessionStorage au refresh
     return sessionStorage.getItem("lilith_module") || null;
   });
   const [auth, setAuth] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [homeTheme, setHomeTheme] = useState(function() {
+    return localStorage.getItem("lilith_home_theme") || "light";
+  });
+  function toggleHomeTheme() {
+    setHomeTheme(function(t) {
+      var next = t === "light" ? "dark" : "light";
+      localStorage.setItem("lilith_home_theme", next);
+      return next;
+    });
+  }
 
   // Gère le bouton retour du navigateur
   useEffect(function() {
@@ -9858,7 +9885,7 @@ function App() {
   if (!auth) return <LoginScreen onAuth={handleAuth}/>;
 
   if (!currentModule) {
-    return <HomeScreen onOpen={openModule} onSignOut={handleSignOut} userEmail={auth.email}/>;
+    return <HomeScreen onOpen={openModule} onSignOut={handleSignOut} userEmail={auth.email} themeMode={homeTheme} onToggleTheme={toggleHomeTheme}/>;
   }
   if (currentModule === "tracker") {
     return <ArtTrackerApp onHome={closeModule}/>;
@@ -9869,7 +9896,7 @@ function App() {
   if (currentModule === "diy") {
     return <DiyTrackerApp onHome={closeModule}/>;
   }
-  return <HomeScreen onOpen={openModule} onSignOut={handleSignOut} userEmail={auth.email}/>;
+  return <HomeScreen onOpen={openModule} onSignOut={handleSignOut} userEmail={auth.email} themeMode={homeTheme} onToggleTheme={toggleHomeTheme}/>;
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
