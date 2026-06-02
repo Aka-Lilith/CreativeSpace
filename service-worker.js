@@ -1,4 +1,4 @@
-const CACHE_NAME = "lilith-studio-v45";
+const CACHE_NAME = "lilith-studio-v49";
 const BASE = "/CreativeSpace";
 
 const PRECACHE = [
@@ -10,7 +10,7 @@ const PRECACHE = [
   BASE + "/favicon.png",
 ];
 
-const CDN_CACHE = "lilith-cdn-v47";
+const CDN_CACHE = "lilith-cdn-v49";
 const CDN_URLS = [
   "https://unpkg.com/react@18/umd/react.production.min.js",
   "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js",

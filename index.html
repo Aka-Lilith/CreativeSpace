@@ -2856,9 +2856,10 @@ function ProjectCard(props) {
   const skills = props.skills;
   const onUpdate = props.onUpdate;
   const onDelete = props.onDelete;
-  const onStepXp = props.onStepXp;   // (projectId, stepId, wasAlreadyDone) => void
+  const onStepXp = props.onStepXp;         // (projectId, stepId, linkedSkills, xpPerStep) => void
+  const onStepXpRemove = props.onStepXpRemove; // (projectId, stepId, linkedSkills, xpPerStep) => void
   const onEdit = props.onEdit;
-  const onBonusXp = props.onBonusXp; // (projectId) => void
+  const onBonusXp = props.onBonusXp;       // (projectId, linkedSkills, xpBonus) => void
   const onBonusXpRemove = props.onBonusXpRemove;
   const [expanded, setExpanded] = useState(false);
   const [newStep, setNewStep] = useState("");
@@ -2899,6 +2900,7 @@ function ProjectCard(props) {
     var nowComplete = newDone === total && total > 0;
     onUpdate(p.id, {steps: newSteps});
     if (!wasDone) onStepXp(p.id, sid, linkedSkills, xpPerStep);
+    if (wasDone && onStepXpRemove) onStepXpRemove(p.id, sid, linkedSkills, xpPerStep);
     if (nowComplete && !wasComplete) onBonusXp(p.id, linkedSkills, xpBonus);
     if (!nowComplete && wasComplete && onBonusXpRemove) onBonusXpRemove(p.id, linkedSkills, xpBonus);
   }
@@ -3140,6 +3142,12 @@ function ProjectsPage(props) {
     var gains = linkedSkills.map(function(ls) { return {skillId:ls.skillId, xp:xpEach}; });
     onXpRemove(gains);
   }
+  function handleStepXpRemove(projId, stepId, linkedSkills, xpPerStep) {
+    if (!linkedSkills || linkedSkills.length===0 || !onXpRemove) return;
+    var xpEach = Math.max(1, xpPerStep);
+    var gains = linkedSkills.map(function(ls) { return {skillId:ls.skillId, xp:xpEach}; });
+    onXpRemove(gains);
+  }
 
   var filtered = projects.filter(function(p) {
     if (filterStatus==="tous") return true;
@@ -3174,7 +3182,7 @@ function ProjectsPage(props) {
       {/* Liste */}
       {filtered.length===0 && <div style={{...block,textAlign:"center",color:THEME.textMuted,fontSize:13}}>Aucun projet ici.</div>}
       {filtered.map(function(p) {
-        return <ProjectCard key={p.id} project={p} skills={skills} onUpdate={updateProject} onDelete={deleteProject} onEdit={onEdit} onStepXp={handleStepXp} onBonusXp={handleBonusXp} onBonusXpRemove={handleBonusXpRemove}/>;
+        return <ProjectCard key={p.id} project={p} skills={skills} onUpdate={updateProject} onDelete={deleteProject} onEdit={onEdit} onStepXp={handleStepXp} onStepXpRemove={handleStepXpRemove} onBonusXp={handleBonusXp} onBonusXpRemove={handleBonusXpRemove}/>;
       })}
 
       {/* Formulaire ajout */}
@@ -4150,6 +4158,7 @@ function ArtTrackerApp(props) {
   const [showSessionLibre, setShowSessionLibre] = useState(false);
   const [showAllThemes,  setShowAllThemes]  = useState(false);
   const [toast,          setToast]          = useState(null);
+  const [showLevelModal, setShowLevelModal] = useState(false);
   const [page,           setPage]           = useState("tracker");
 
   // Migration : ajoute les compétences par défaut manquantes sans toucher aux données existantes
@@ -4833,13 +4842,99 @@ function ArtTrackerApp(props) {
         </div>
       )}
 
+      {/* Modal niveau global */}
+      {showLevelModal && (function() {
+        var lv   = Math.floor(globalXp / XP_PER_LEVEL) + 1;
+        var xpIn = globalXp % XP_PER_LEVEL;
+        var totalXp = globalXp;
+        // Historique XP récent (20 dernières entrées avec gains)
+        var recentGains = (history || []).filter(function(e) { return e.gains && e.gains.length > 0; }).slice(0, 20);
+        // Paliers bannières à venir
+        var nextTiers = ART_LEVEL_TITLES.filter(function(t) { return t.min > lv; }).slice(0, 3);
+        return (
+          <div onClick={function() { setShowLevelModal(false); }} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 20px 0"}}>
+            <div onClick={function(e) { e.stopPropagation(); }} style={{background:THEME.surface,border:"0.5px solid "+THEME.border,borderRadius:24,padding:"1.4rem 1.2rem",width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto",display:"flex",flexDirection:"column",gap:14}}>
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{fontSize:15,fontWeight:700,color:THEME.text}}>Niveau {lv} — {getArtLevelInfo(lv).title}</div>
+                <button onClick={function() { setShowLevelModal(false); }} style={{border:"none",background:"none",cursor:"pointer",fontSize:18,color:THEME.textMuted}}>✕</button>
+              </div>
+              {/* Bannière */}
+              <ArtLevelBanner level={lv} title={getArtLevelInfo(lv).title} tier={getArtLevelInfo(lv).tier} xpIn={xpIn} xpTotal={XP_PER_LEVEL}/>
+              {/* Stats globales */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                  <div style={{fontSize:10,color:THEME.textMuted,marginBottom:2}}>XP total accumulé</div>
+                  <div style={{fontSize:18,fontWeight:700,color:THEME.accent}}>{totalXp}</div>
+                </div>
+                <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                  <div style={{fontSize:10,color:THEME.textMuted,marginBottom:2}}>XP vers le prochain niv.</div>
+                  <div style={{fontSize:18,fontWeight:700,color:THEME.accent}}>{XP_PER_LEVEL - xpIn}</div>
+                </div>
+              </div>
+              {/* Prochains paliers bannières */}
+              {nextTiers.length > 0 && (
+                <div>
+                  <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,marginBottom:8,letterSpacing:"0.5px"}}>PROCHAINS PALIERS</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {nextTiers.map(function(t) {
+                      var xpNeeded = (t.min - lv) * XP_PER_LEVEL - xpIn;
+                      var tierLabels = {1:"Basique",2:"Ornée",3:"Enrichie",4:"Majestueuse",5:"Légendaire"};
+                      var tierColors = {1:THEME.textMuted,2:THEME.accent,3:"#C4A8FF",4:"#F5C842",5:"#FF9E6D"};
+                      var tc = tierColors[t.tier] || THEME.accent;
+                      return (
+                        <div key={t.min} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",borderRadius:12,background:THEME.surfaceCard,border:"0.5px solid "+tc+"33"}}>
+                          <div style={{width:36,height:36,borderRadius:10,background:tc+"18",border:"1px solid "+tc+"44",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                            <span style={{fontSize:16}}>{t.tier>=5?"✦":t.tier>=4?"❖":t.tier>=3?"◈":t.tier>=2?"◇":"○"}</span>
+                          </div>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:12,fontWeight:600,color:THEME.text}}>Niv. {t.min} — {t.title}</div>
+                            <div style={{fontSize:10,color:THEME.textMuted}}>Bannière {tierLabels[t.tier]} • encore {xpNeeded > 0 ? xpNeeded+" XP" : "déjà débloquée !"}</div>
+                          </div>
+                          <div style={{fontSize:10,color:tc,fontWeight:600,background:tc+"12",borderRadius:20,padding:"2px 8px",flexShrink:0}}>Tier {t.tier}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Historique XP récent */}
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,marginBottom:8,letterSpacing:"0.5px"}}>HISTORIQUE XP RÉCENT</div>
+                {recentGains.length === 0 && <div style={{fontSize:12,color:THEME.textMuted,textAlign:"center",padding:"10px"}}>Aucune session enregistrée.</div>}
+                <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                  {recentGains.map(function(e) {
+                    var totalEarned = e.gains.reduce(function(s,g) { return s + g.xp; }, 0);
+                    return (
+                      <div key={e.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:10,background:THEME.surfaceCard,border:"0.5px solid "+THEME.border}}>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,color:THEME.text,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.taskName || "Session"}</div>
+                          <div style={{fontSize:10,color:THEME.textMuted}}>{e.date}</div>
+                        </div>
+                        <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end",flexShrink:0}}>
+                          {e.gains.map(function(g,i) {
+                            return <span key={i} style={{fontSize:10,background:(g.color||THEME.accent)+"18",color:(g.color||THEME.accent),borderRadius:20,padding:"1px 7px",fontWeight:600,border:"1px solid "+(g.color||THEME.accent)+"33"}}>+{g.xp}</span>;
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Bannière niveau global */}
       {(function() {
         var lv   = Math.floor(globalXp / XP_PER_LEVEL) + 1;
         var xpIn = globalXp % XP_PER_LEVEL;
         var info = getArtLevelInfo(lv);
         return (
-          <ArtLevelBanner level={lv} title={info.title} tier={info.tier} xpIn={xpIn} xpTotal={XP_PER_LEVEL}/>
+          <div onClick={function() { setShowLevelModal(true); }} style={{cursor:"pointer"}} title="Voir les stats de niveau">
+            <ArtLevelBanner level={lv} title={info.title} tier={info.tier} xpIn={xpIn} xpTotal={XP_PER_LEVEL}/>
+          </div>
         );
       })()}
 
