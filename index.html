@@ -4269,36 +4269,57 @@ function ArtTrackerApp(props) {
 
   // Chargement initial
   useEffect(function() {
-    storage.get(STORAGE_KEY).then(function(d) {
+    Promise.all([
+      storage.get(STORAGE_KEY),
+      storage.get(THEMES_KEY),
+      storage.get("art_tracker_theme_v1"),
+      storage.get(FAV_KEY),
+      storage.get(CHALLENGES_KEY),
+      storage.get(FORMATIONS_KEY),
+      storage.get(TIMER_KEY),
+      storage.get(GALLERY_KEY),
+      storage.get(PROJECTS_KEY),
+      storage.get(DECAY_KEY),
+      storage.get(GLOBAL_XP_KEY),
+    ]).then(function(results) {
+      var d          = results[0];
+      var t          = results[1];
+      var th         = results[2];
+      var fav        = results[3];
+      var chall      = results[4];
+      var form       = results[5];
+      var timer      = results[6];
+      var gal        = results[7];
+      var proj       = results[8];
+      var decay      = results[9];
+      // results[10] = globalXp ignoré, recalculé depuis skills
+
       if (d) {
-        var migratedSkills = migrateSkills(d.skills);
-        var migratedTasks = migrateTasks(d.tasks);
-        setSkills(migratedSkills);
-        setTasks(migratedTasks);
+        setSkills(migrateSkills(d.skills));
+        setTasks(migrateTasks(d.tasks));
         setHistory(d.history||[]);
         setCC(d.completionCount||{});
+      } else {
+        setSkills(DEFAULT_SKILLS);
+        setTasks(injectMedium(DEFAULT_TASKS));
+        setHistory([]);
+        setCC({});
       }
-      else { setSkills(DEFAULT_SKILLS); setTasks(injectMedium(DEFAULT_TASKS)); setHistory([]); setCC({}); }
-      storage.get(THEMES_KEY).then(function(t) {
-        var migrated = migrateThemes(t || []);
-        setThemes(migrated);
-        if (!t || migrated.length > t.length) {
-          storage.set(THEMES_KEY, migrated);
-        }
-      });
-      storage.get("art_tracker_theme_v1").then(function(th) { if (th) setThemeMode(th); });
-      storage.get(FAV_KEY).then(function(f) { if(f) setFavorites(f); });
-      storage.get(CHALLENGES_KEY).then(function(c) { if(c) setChallenges(c); });
-      storage.get(FORMATIONS_KEY).then(function(f) { if(f) setFormations(f); });
-      storage.get(TIMER_KEY).then(function(t) { if(t) setTimerData(t); });
-      storage.get(GALLERY_KEY).then(function(g) { if(g) setGallery(g); });
-      storage.get(PROJECTS_KEY).then(function(p) { if(p) setProjects(p); });
-      storage.get(DECAY_KEY).then(function(d) { if(d) setDecayState(d); });
-      storage.get(GLOBAL_XP_KEY).then(function(v) {
-        // On ignore la valeur stockée et on recalcule depuis les skills
-        // (sera mis à jour une fois les skills chargés via useEffect)
-        setLoaded(true);
-      });
+
+      var migrated = migrateThemes(t || []);
+      setThemes(migrated);
+      if (!t || migrated.length > t.length) storage.set(THEMES_KEY, migrated);
+
+      if (th)    setThemeMode(th);
+      if (fav)   setFavorites(fav);
+      if (chall) setChallenges(chall);
+      if (form)  setFormations(form);
+      if (timer) setTimerData(timer);
+      if (gal)   setGallery(gal);
+      if (proj)  setProjects(proj);
+      if (decay) setDecayState(decay);
+
+      setLoaded(true);
     });
   }, []);
 
