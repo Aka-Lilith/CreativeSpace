@@ -36,9 +36,11 @@ const FAV_KEY        = "skill_tracker_favs";
 const CHALLENGES_KEY = "skill_tracker_challenges";
 const FORMATIONS_KEY = "skill_tracker_formations";
 const TIMER_KEY      = "skill_tracker_timer";
-const PROJECTS_KEY   = "skill_tracker_projects";
-const DECAY_KEY      = "skill_tracker_decay";
-const GALLERY_KEY    = "skill_tracker_gallery_v1";
+const PROJECTS_KEY      = "skill_tracker_projects";
+const DECAY_KEY         = "skill_tracker_decay";
+const GALLERY_KEY       = "skill_tracker_gallery_v1";
+const ACHIEVEMENTS_KEY  = "skill_tracker_achievements_v1";
+const FOCUS_KEY         = "skill_tracker_focus_v1";
 const DECAY_GRACE_DAYS = 7;   // jours avant première pénalité
 const DECAY_XP_PER_WEEK = 5;  // XP perdu par semaine supplémentaire
 // Clés des autres modules — déclarées ici pour le DashboardWidget
@@ -226,6 +228,350 @@ const THEMES = {
 
 // THEME global — initialisé avec le thème clair dès le départ
 var THEME = Object.assign({}, THEMES.light);
+
+// ─── THÈMES EXCLUSIFS ────────────────────────────────────────────────────────
+// Débloqués par niveau 10 dans une compétence ou par achievement
+// Provisoires — à remplacer par les vraies palettes plus tard
+
+var EXCLUSIVE_THEMES = {
+
+  // ── Thèmes compétences (lvl 10) ──────────────────────────────────────────
+
+  "chair-et-os": {
+    name: "Chair et Os", unlockedBy: { type: "skill", skillId: 1 },
+    bg:"#1A0A0A", surface:"rgba(45,18,18,0.95)", surfaceLight:"rgba(58,22,22,0.85)", surfaceCard:"rgba(50,20,20,0.9)",
+    border:"rgba(255,120,100,0.15)", borderLight:"rgba(255,120,100,0.25)", text:"#F5E6E0", textSub:"#D4A090", textMuted:"#8A5A50",
+    accent:"#C0392B", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#E8C87A", danger:"#F87171",
+    xpTrack:"rgba(192,57,43,0.2)", cardDone:"rgba(192,57,43,0.08)", cardDoneBorder:"rgba(192,57,43,0.25)",
+    inputBg:"rgba(255,255,255,0.06)", modalBg:"#1A0A0A", filterActive:"rgba(192,57,43,0.18)", filterBorder:"rgba(192,57,43,0.5)",
+    bgGradient:"radial-gradient(ellipse at 20% 10%, #3D1010 0%, #1A0A0A 40%, #0D0D0D 100%)",
+    inputCSS:"background:rgba(255,255,255,0.06)!important;color:#F5E6E0!important;border:1px solid rgba(255,120,100,0.2)!important;",
+    placeholderCSS:"color:#8A5A50!important;", selectCSS:"background:#1A0A0A;color:#F5E6E0;",
+    scrollThumb:"rgba(192,57,43,0.3)", decoOpacity:1,
+  },
+
+  "spectre": {
+    name: "Spectre", unlockedBy: { type: "skill", skillId: 2 },
+    bg:"#0D0D1A", surface:"rgba(20,18,40,0.95)", surfaceLight:"rgba(30,26,55,0.85)", surfaceCard:"rgba(25,22,48,0.9)",
+    border:"rgba(200,180,255,0.12)", borderLight:"rgba(200,180,255,0.22)", text:"#F0EEFF", textSub:"#B8A8F0", textMuted:"#7068A8",
+    accent:"#A78BFA", accentGreen:"#6EE7B7", accentPink:"#F472B6", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(167,139,250,0.18)", cardDone:"rgba(110,231,183,0.08)", cardDoneBorder:"rgba(110,231,183,0.25)",
+    inputBg:"rgba(255,255,255,0.06)", modalBg:"#0D0D1A", filterActive:"rgba(167,139,250,0.18)", filterBorder:"rgba(167,139,250,0.5)",
+    bgGradient:"radial-gradient(ellipse at 50% 0%, #3D1060 0%, #0D0D1A 35%, #0A1A30 65%, #1A0A20 100%)",
+    inputCSS:"background:rgba(255,255,255,0.06)!important;color:#F0EEFF!important;border:1px solid rgba(200,180,255,0.18)!important;",
+    placeholderCSS:"color:#7068A8!important;", selectCSS:"background:#0D0D1A;color:#F0EEFF;",
+    scrollThumb:"rgba(167,139,250,0.3)", decoOpacity:1,
+  },
+
+  "signature": {
+    name: "Signature", unlockedBy: { type: "skill", skillId: 3 },
+    bg:"#FAF5F0", surface:"rgba(255,250,245,0.92)", surfaceLight:"rgba(248,240,232,0.88)", surfaceCard:"rgba(255,252,248,0.85)",
+    border:"rgba(160,60,60,0.15)", borderLight:"rgba(160,60,60,0.25)", text:"#2A1A1A", textSub:"#6A3030", textMuted:"#9A7070",
+    accent:"#8B1A1A", accentGreen:"#2E7D4A", accentPink:"#C2567A", accentGold:"#A07820", danger:"#C0404A",
+    xpTrack:"rgba(139,26,26,0.15)", cardDone:"rgba(46,125,74,0.08)", cardDoneBorder:"rgba(46,125,74,0.25)",
+    inputBg:"rgba(255,255,255,0.95)", modalBg:"#F5EDE8", filterActive:"rgba(139,26,26,0.10)", filterBorder:"rgba(139,26,26,0.4)",
+    bgGradient:"radial-gradient(ellipse at 80% 10%, #F5D5C0 0%, #FAF5F0 40%, #F0EAE5 100%)",
+    inputCSS:"background:rgba(255,255,255,0.95)!important;color:#2A1A1A!important;border:1px solid rgba(160,60,60,0.25)!important;",
+    placeholderCSS:"color:#9A7070!important;", selectCSS:"background:#FAF5F0;color:#2A1A1A;",
+    scrollThumb:"rgba(139,26,26,0.2)", decoOpacity:0.5,
+  },
+
+  "horizon": {
+    name: "Horizon", unlockedBy: { type: "skill", skillId: 4 },
+    bg:"#0A1020", surface:"rgba(15,22,45,0.95)", surfaceLight:"rgba(20,30,58,0.85)", surfaceCard:"rgba(18,26,50,0.9)",
+    border:"rgba(80,140,220,0.15)", borderLight:"rgba(80,140,220,0.25)", text:"#E0EEFF", textSub:"#90B8E8", textMuted:"#506888",
+    accent:"#3A7BD5", accentGreen:"#50C8A0", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(58,123,213,0.2)", cardDone:"rgba(80,200,160,0.08)", cardDoneBorder:"rgba(80,200,160,0.25)",
+    inputBg:"rgba(255,255,255,0.07)", modalBg:"#0A1020", filterActive:"rgba(58,123,213,0.18)", filterBorder:"rgba(58,123,213,0.5)",
+    bgGradient:"radial-gradient(ellipse at 50% 100%, #0A2050 0%, #0A1020 40%, #050810 100%)",
+    inputCSS:"background:rgba(255,255,255,0.07)!important;color:#E0EEFF!important;border:1px solid rgba(80,140,220,0.2)!important;",
+    placeholderCSS:"color:#506888!important;", selectCSS:"background:#0A1020;color:#E0EEFF;",
+    scrollThumb:"rgba(58,123,213,0.3)", decoOpacity:1,
+  },
+
+  "cadre": {
+    name: "Cadre", unlockedBy: { type: "skill", skillId: 5 },
+    bg:"#1A1608", surface:"rgba(38,32,14,0.95)", surfaceLight:"rgba(50,42,18,0.85)", surfaceCard:"rgba(44,37,16,0.9)",
+    border:"rgba(220,180,60,0.15)", borderLight:"rgba(220,180,60,0.28)", text:"#F5EDD0", textSub:"#C8A850", textMuted:"#887840",
+    accent:"#C8960A", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(200,150,10,0.2)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.06)", modalBg:"#1A1608", filterActive:"rgba(200,150,10,0.18)", filterBorder:"rgba(200,150,10,0.5)",
+    bgGradient:"radial-gradient(ellipse at 30% 20%, #3A2E08 0%, #1A1608 40%, #100E04 100%)",
+    inputCSS:"background:rgba(255,255,255,0.06)!important;color:#F5EDD0!important;border:1px solid rgba(220,180,60,0.2)!important;",
+    placeholderCSS:"color:#887840!important;", selectCSS:"background:#1A1608;color:#F5EDD0;",
+    scrollThumb:"rgba(200,150,10,0.3)", decoOpacity:1,
+  },
+
+  "clair-obscur": {
+    name: "Clair-Obscur", unlockedBy: { type: "skill", skillId: 6 },
+    bg:"#080808", surface:"rgba(18,18,18,0.97)", surfaceLight:"rgba(28,28,28,0.90)", surfaceCard:"rgba(22,22,22,0.95)",
+    border:"rgba(255,255,255,0.10)", borderLight:"rgba(255,255,255,0.20)", text:"#F0F0F0", textSub:"#C0C0C0", textMuted:"#707070",
+    accent:"#E8E0D0", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(232,224,208,0.15)", cardDone:"rgba(232,224,208,0.06)", cardDoneBorder:"rgba(232,224,208,0.2)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#080808", filterActive:"rgba(232,224,208,0.12)", filterBorder:"rgba(232,224,208,0.4)",
+    bgGradient:"radial-gradient(ellipse at 50% 50%, #1A1A1A 0%, #080808 60%, #000000 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#F0F0F0!important;border:1px solid rgba(255,255,255,0.15)!important;",
+    placeholderCSS:"color:#707070!important;", selectCSS:"background:#080808;color:#F0F0F0;",
+    scrollThumb:"rgba(255,255,255,0.15)", decoOpacity:1,
+  },
+
+  "aqua": {
+    name: "Aqua", unlockedBy: { type: "skill", skillId: 7 },
+    bg:"#F0F8FF", surface:"rgba(240,250,255,0.92)", surfaceLight:"rgba(225,242,252,0.88)", surfaceCard:"rgba(245,252,255,0.85)",
+    border:"rgba(30,120,180,0.15)", borderLight:"rgba(30,120,180,0.28)", text:"#0A2030", textSub:"#1A5070", textMuted:"#507090",
+    accent:"#1A7AB5", accentGreen:"#0E9E75", accentPink:"#C2567A", accentGold:"#A07820", danger:"#C0404A",
+    xpTrack:"rgba(26,122,181,0.15)", cardDone:"rgba(14,158,117,0.08)", cardDoneBorder:"rgba(14,158,117,0.25)",
+    inputBg:"rgba(255,255,255,0.95)", modalBg:"#E8F4FC", filterActive:"rgba(26,122,181,0.10)", filterBorder:"rgba(26,122,181,0.4)",
+    bgGradient:"radial-gradient(ellipse at 30% 0%, #C8E8FF 0%, #F0F8FF 40%, #E0F2FA 100%)",
+    inputCSS:"background:rgba(255,255,255,0.95)!important;color:#0A2030!important;border:1px solid rgba(30,120,180,0.25)!important;",
+    placeholderCSS:"color:#507090!important;", selectCSS:"background:#F0F8FF;color:#0A2030;",
+    scrollThumb:"rgba(26,122,181,0.2)", decoOpacity:0.5,
+  },
+
+  "retro-pixel": {
+    name: "Rétro Pixel", unlockedBy: { type: "skill", skillId: 8 },
+    bg:"#000000", surface:"rgba(0,20,0,0.97)", surfaceLight:"rgba(0,30,0,0.90)", surfaceCard:"rgba(0,25,0,0.95)",
+    border:"rgba(0,255,80,0.15)", borderLight:"rgba(0,255,80,0.28)", text:"#00FF50", textSub:"#00CC40", textMuted:"#006820",
+    accent:"#00FF50", accentGreen:"#00FF50", accentPink:"#FF00AA", accentGold:"#FFFF00", danger:"#FF0000",
+    xpTrack:"rgba(0,255,80,0.15)", cardDone:"rgba(0,255,80,0.06)", cardDoneBorder:"rgba(0,255,80,0.25)",
+    inputBg:"rgba(0,255,80,0.05)", modalBg:"#000000", filterActive:"rgba(0,255,80,0.12)", filterBorder:"rgba(0,255,80,0.5)",
+    bgGradient:"linear-gradient(180deg, #000000 0%, #001000 100%)",
+    inputCSS:"background:rgba(0,255,80,0.05)!important;color:#00FF50!important;border:1px solid rgba(0,255,80,0.3)!important;",
+    placeholderCSS:"color:#006820!important;", selectCSS:"background:#000000;color:#00FF50;",
+    scrollThumb:"rgba(0,255,80,0.3)", decoOpacity:1,
+  },
+
+  "frame-par-frame": {
+    name: "Frame par Frame", unlockedBy: { type: "skill", skillId: 9 },
+    bg:"#0A0808", surface:"rgba(22,16,12,0.97)", surfaceLight:"rgba(32,24,16,0.90)", surfaceCard:"rgba(28,20,14,0.95)",
+    border:"rgba(255,120,20,0.15)", borderLight:"rgba(255,120,20,0.28)", text:"#FFF0E0", textSub:"#FFB060", textMuted:"#885030",
+    accent:"#FF7010", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(255,112,16,0.2)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#0A0808", filterActive:"rgba(255,112,16,0.18)", filterBorder:"rgba(255,112,16,0.5)",
+    bgGradient:"radial-gradient(ellipse at 50% 30%, #2A1408 0%, #0A0808 50%, #050404 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#FFF0E0!important;border:1px solid rgba(255,120,20,0.2)!important;",
+    placeholderCSS:"color:#885030!important;", selectCSS:"background:#0A0808;color:#FFF0E0;",
+    scrollThumb:"rgba(255,112,16,0.3)", decoOpacity:1,
+  },
+
+  "concept-art": {
+    name: "Concept Art", unlockedBy: { type: "skill", skillId: 10 },
+    bg:"#0E1118", surface:"rgba(18,22,32,0.95)", surfaceLight:"rgba(26,30,44,0.88)", surfaceCard:"rgba(22,26,38,0.92)",
+    border:"rgba(100,130,180,0.15)", borderLight:"rgba(100,130,180,0.28)", text:"#D8E4F0", textSub:"#8AA8C8", textMuted:"#506070",
+    accent:"#6898C8", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(104,152,200,0.18)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.06)", modalBg:"#0E1118", filterActive:"rgba(104,152,200,0.15)", filterBorder:"rgba(104,152,200,0.45)",
+    bgGradient:"radial-gradient(ellipse at 70% 20%, #1A2038 0%, #0E1118 45%, #080C14 100%)",
+    inputCSS:"background:rgba(255,255,255,0.06)!important;color:#D8E4F0!important;border:1px solid rgba(100,130,180,0.2)!important;",
+    placeholderCSS:"color:#506070!important;", selectCSS:"background:#0E1118;color:#D8E4F0;",
+    scrollThumb:"rgba(104,152,200,0.25)", decoOpacity:1,
+  },
+
+  "panorama": {
+    name: "Panorama", unlockedBy: { type: "skill", skillId: 11 },
+    bg:"#081410", surface:"rgba(12,28,20,0.97)", surfaceLight:"rgba(18,38,28,0.90)", surfaceCard:"rgba(15,32,24,0.95)",
+    border:"rgba(60,200,140,0.15)", borderLight:"rgba(60,200,140,0.28)", text:"#D8F5E8", textSub:"#70C8A0", textMuted:"#387858",
+    accent:"#2EAA78", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(46,170,120,0.2)", cardDone:"rgba(126,236,196,0.10)", cardDoneBorder:"rgba(126,236,196,0.30)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#081410", filterActive:"rgba(46,170,120,0.15)", filterBorder:"rgba(46,170,120,0.45)",
+    bgGradient:"radial-gradient(ellipse at 20% 80%, #0A2818 0%, #081410 45%, #040A08 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#D8F5E8!important;border:1px solid rgba(60,200,140,0.2)!important;",
+    placeholderCSS:"color:#387858!important;", selectCSS:"background:#081410;color:#D8F5E8;",
+    scrollThumb:"rgba(46,170,120,0.3)", decoOpacity:1,
+  },
+
+  "encre": {
+    name: "Encre", unlockedBy: { type: "skill", skillId: 12 },
+    bg:"#FAFAF8", surface:"rgba(252,252,250,0.95)", surfaceLight:"rgba(245,245,242,0.90)", surfaceCard:"rgba(255,255,253,0.92)",
+    border:"rgba(20,20,20,0.12)", borderLight:"rgba(20,20,20,0.22)", text:"#0A0A0A", textSub:"#303030", textMuted:"#707070",
+    accent:"#0A0A0A", accentGreen:"#1A9E75", accentPink:"#C2567A", accentGold:"#A07820", danger:"#C0404A",
+    xpTrack:"rgba(10,10,10,0.12)", cardDone:"rgba(26,158,117,0.08)", cardDoneBorder:"rgba(26,158,117,0.25)",
+    inputBg:"rgba(255,255,255,0.98)", modalBg:"#F5F5F2", filterActive:"rgba(10,10,10,0.08)", filterBorder:"rgba(10,10,10,0.35)",
+    bgGradient:"radial-gradient(ellipse at 50% 0%, #EFEFEA 0%, #FAFAF8 50%, #F5F5F0 100%)",
+    inputCSS:"background:rgba(255,255,255,0.98)!important;color:#0A0A0A!important;border:1px solid rgba(20,20,20,0.2)!important;",
+    placeholderCSS:"color:#707070!important;", selectCSS:"background:#FAFAF8;color:#0A0A0A;",
+    scrollThumb:"rgba(10,10,10,0.2)", decoOpacity:0.4,
+  },
+
+  "storyboard": {
+    name: "Storyboard", unlockedBy: { type: "skill", skillId: 13 },
+    bg:"#10141A", surface:"rgba(20,26,36,0.97)", surfaceLight:"rgba(28,35,48,0.90)", surfaceCard:"rgba(24,30,42,0.95)",
+    border:"rgba(240,200,40,0.15)", borderLight:"rgba(240,200,40,0.28)", text:"#F8F0D0", textSub:"#D8C060", textMuted:"#787040",
+    accent:"#E8C020", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(232,192,32,0.18)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#10141A", filterActive:"rgba(232,192,32,0.15)", filterBorder:"rgba(232,192,32,0.45)",
+    bgGradient:"radial-gradient(ellipse at 40% 10%, #202010 0%, #10141A 45%, #080A0E 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#F8F0D0!important;border:1px solid rgba(240,200,40,0.2)!important;",
+    placeholderCSS:"color:#787040!important;", selectCSS:"background:#10141A;color:#F8F0D0;",
+    scrollThumb:"rgba(232,192,32,0.3)", decoOpacity:1,
+  },
+
+  "neon": {
+    name: "Néon", unlockedBy: { type: "skill", skillId: 14 },
+    bg:"#060810", surface:"rgba(10,12,22,0.97)", surfaceLight:"rgba(16,18,32,0.90)", surfaceCard:"rgba(12,14,26,0.95)",
+    border:"rgba(0,220,255,0.15)", borderLight:"rgba(0,220,255,0.28)", text:"#E0F8FF", textSub:"#60D8F0", textMuted:"#306878",
+    accent:"#00D4FF", accentGreen:"#00FF9A", accentPink:"#FF00CC", accentGold:"#FFE000", danger:"#FF3060",
+    xpTrack:"rgba(0,212,255,0.18)", cardDone:"rgba(0,255,154,0.08)", cardDoneBorder:"rgba(0,255,154,0.28)",
+    inputBg:"rgba(0,220,255,0.05)", modalBg:"#060810", filterActive:"rgba(0,212,255,0.15)", filterBorder:"rgba(0,212,255,0.5)",
+    bgGradient:"radial-gradient(ellipse at 80% 20%, #0A1028 0%, #060810 45%, #020408 100%)",
+    inputCSS:"background:rgba(0,220,255,0.05)!important;color:#E0F8FF!important;border:1px solid rgba(0,220,255,0.2)!important;",
+    placeholderCSS:"color:#306878!important;", selectCSS:"background:#060810;color:#E0F8FF;",
+    scrollThumb:"rgba(0,212,255,0.3)", decoOpacity:1,
+  },
+
+  "atelier": {
+    name: "Atelier", unlockedBy: { type: "skill", skillId: 15 },
+    bg:"#1C1208", surface:"rgba(38,26,14,0.97)", surfaceLight:"rgba(50,36,20,0.90)", surfaceCard:"rgba(44,30,16,0.95)",
+    border:"rgba(180,140,80,0.18)", borderLight:"rgba(180,140,80,0.30)", text:"#F5EAD0", textSub:"#C8A870", textMuted:"#886840",
+    accent:"#B07830", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(176,120,48,0.2)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#1C1208", filterActive:"rgba(176,120,48,0.18)", filterBorder:"rgba(176,120,48,0.5)",
+    bgGradient:"radial-gradient(ellipse at 20% 30%, #2A1A08 0%, #1C1208 45%, #100A04 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#F5EAD0!important;border:1px solid rgba(180,140,80,0.22)!important;",
+    placeholderCSS:"color:#886840!important;", selectCSS:"background:#1C1208;color:#F5EAD0;",
+    scrollThumb:"rgba(176,120,48,0.3)", decoOpacity:1,
+  },
+
+  "flat": {
+    name: "Flat", unlockedBy: { type: "skill", skillId: 16 },
+    bg:"#FFFFFF", surface:"rgba(255,255,255,0.98)", surfaceLight:"rgba(248,248,248,0.95)", surfaceCard:"rgba(255,255,255,0.98)",
+    border:"rgba(255,80,60,0.15)", borderLight:"rgba(255,80,60,0.28)", text:"#1A1A1A", textSub:"#444444", textMuted:"#888888",
+    accent:"#FF4A36", accentGreen:"#00C48C", accentPink:"#FF3D8A", accentGold:"#FFB800", danger:"#FF2D2D",
+    xpTrack:"rgba(255,74,54,0.15)", cardDone:"rgba(0,196,140,0.08)", cardDoneBorder:"rgba(0,196,140,0.25)",
+    inputBg:"rgba(255,255,255,1)", modalBg:"#F8F8F8", filterActive:"rgba(255,74,54,0.08)", filterBorder:"rgba(255,74,54,0.4)",
+    bgGradient:"linear-gradient(135deg, #FFFFFF 0%, #FFF5F4 100%)",
+    inputCSS:"background:#FFFFFF!important;color:#1A1A1A!important;border:1px solid rgba(255,80,60,0.2)!important;",
+    placeholderCSS:"color:#888888!important;", selectCSS:"background:#FFFFFF;color:#1A1A1A;",
+    scrollThumb:"rgba(255,74,54,0.2)", decoOpacity:0.4,
+  },
+
+  "wireframe": {
+    name: "Wireframe", unlockedBy: { type: "skill", skillId: 17 },
+    bg:"#020608", surface:"rgba(4,12,18,0.97)", surfaceLight:"rgba(8,18,28,0.90)", surfaceCard:"rgba(6,14,22,0.95)",
+    border:"rgba(0,200,220,0.15)", borderLight:"rgba(0,200,220,0.28)", text:"#C0F0FF", textSub:"#40C8E0", textMuted:"#206878",
+    accent:"#00C8E8", accentGreen:"#00FFD0", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(0,200,232,0.18)", cardDone:"rgba(0,255,208,0.08)", cardDoneBorder:"rgba(0,255,208,0.28)",
+    inputBg:"rgba(0,200,220,0.04)", modalBg:"#020608", filterActive:"rgba(0,200,232,0.15)", filterBorder:"rgba(0,200,232,0.5)",
+    bgGradient:"radial-gradient(ellipse at 60% 40%, #041420 0%, #020608 50%, #000204 100%)",
+    inputCSS:"background:rgba(0,200,220,0.04)!important;color:#C0F0FF!important;border:1px solid rgba(0,200,220,0.18)!important;",
+    placeholderCSS:"color:#206878!important;", selectCSS:"background:#020608;color:#C0F0FF;",
+    scrollThumb:"rgba(0,200,232,0.3)", decoOpacity:1,
+  },
+
+  // ── Thèmes achievements ───────────────────────────────────────────────────
+
+  "pages-jaunies": {
+    name: "Pages Jaunies", unlockedBy: { type: "achievement", achievementId: "sketchbook_1" },
+    bg:"#F5F0E0", surface:"rgba(248,243,225,0.95)", surfaceLight:"rgba(242,234,210,0.90)", surfaceCard:"rgba(252,248,235,0.92)",
+    border:"rgba(120,80,30,0.15)", borderLight:"rgba(120,80,30,0.28)", text:"#2A1A08", textSub:"#6A4820", textMuted:"#9A7848",
+    accent:"#8B5E1A", accentGreen:"#4A8A50", accentPink:"#C2567A", accentGold:"#A07820", danger:"#C0404A",
+    xpTrack:"rgba(139,94,26,0.15)", cardDone:"rgba(74,138,80,0.08)", cardDoneBorder:"rgba(74,138,80,0.25)",
+    inputBg:"rgba(255,255,255,0.90)", modalBg:"#EDE8D0", filterActive:"rgba(139,94,26,0.10)", filterBorder:"rgba(139,94,26,0.4)",
+    bgGradient:"radial-gradient(ellipse at 30% 10%, #E8DDB0 0%, #F5F0E0 50%, #EDE5C8 100%)",
+    inputCSS:"background:rgba(255,255,255,0.90)!important;color:#2A1A08!important;border:1px solid rgba(120,80,30,0.22)!important;",
+    placeholderCSS:"color:#9A7848!important;", selectCSS:"background:#F5F0E0;color:#2A1A08;",
+    scrollThumb:"rgba(139,94,26,0.2)", decoOpacity:0.5,
+  },
+
+  "papier-craft": {
+    name: "Papier Craft", unlockedBy: { type: "achievement", achievementId: "sketchbook_3" },
+    bg:"#C8A878", surface:"rgba(185,148,100,0.95)", surfaceLight:"rgba(200,165,118,0.90)", surfaceCard:"rgba(192,156,108,0.92)",
+    border:"rgba(80,50,20,0.20)", borderLight:"rgba(80,50,20,0.35)", text:"#1A0E04", textSub:"#3A2210", textMuted:"#6A4820",
+    accent:"#5A3010", accentGreen:"#3A6A30", accentPink:"#A84060", accentGold:"#886018", danger:"#A03020",
+    xpTrack:"rgba(90,48,16,0.2)", cardDone:"rgba(58,106,48,0.10)", cardDoneBorder:"rgba(58,106,48,0.30)",
+    inputBg:"rgba(255,255,255,0.25)", modalBg:"#B89060", filterActive:"rgba(90,48,16,0.15)", filterBorder:"rgba(90,48,16,0.45)",
+    bgGradient:"radial-gradient(ellipse at 50% 50%, #D8B888 0%, #C8A878 50%, #B89060 100%)",
+    inputCSS:"background:rgba(255,255,255,0.25)!important;color:#1A0E04!important;border:1px solid rgba(80,50,20,0.3)!important;",
+    placeholderCSS:"color:#6A4820!important;", selectCSS:"background:#C8A878;color:#1A0E04;",
+    scrollThumb:"rgba(90,48,16,0.3)", decoOpacity:0.6,
+  },
+
+  "foret-botanique": {
+    name: "Forêt Botanique", unlockedBy: { type: "achievement", achievementId: "carnet_rando" },
+    bg:"#0C1A0C", surface:"rgba(16,30,16,0.97)", surfaceLight:"rgba(22,40,22,0.90)", surfaceCard:"rgba(18,34,18,0.95)",
+    border:"rgba(80,180,80,0.15)", borderLight:"rgba(80,180,80,0.28)", text:"#D0F0D0", textSub:"#80C880", textMuted:"#407840",
+    accent:"#3AA83A", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(58,168,58,0.2)", cardDone:"rgba(126,236,196,0.10)", cardDoneBorder:"rgba(126,236,196,0.30)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#0C1A0C", filterActive:"rgba(58,168,58,0.15)", filterBorder:"rgba(58,168,58,0.45)",
+    bgGradient:"radial-gradient(ellipse at 20% 80%, #0A280A 0%, #0C1A0C 45%, #060E06 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#D0F0D0!important;border:1px solid rgba(80,180,80,0.2)!important;",
+    placeholderCSS:"color:#407840!important;", selectCSS:"background:#0C1A0C;color:#D0F0D0;",
+    scrollThumb:"rgba(58,168,58,0.3)", decoOpacity:1,
+  },
+
+  "encre-de-minuit": {
+    name: "Encre de Minuit", unlockedBy: { type: "achievement", achievementId: "30days" },
+    bg:"#04040C", surface:"rgba(8,8,20,0.97)", surfaceLight:"rgba(14,14,30,0.90)", surfaceCard:"rgba(10,10,24,0.95)",
+    border:"rgba(180,180,220,0.12)", borderLight:"rgba(180,180,220,0.22)", text:"#E8E8F8", textSub:"#A0A0C8", textMuted:"#505068",
+    accent:"#C0C0E8", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(192,192,232,0.15)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.04)", modalBg:"#04040C", filterActive:"rgba(192,192,232,0.12)", filterBorder:"rgba(192,192,232,0.4)",
+    bgGradient:"radial-gradient(ellipse at 50% 50%, #0A0A18 0%, #04040C 60%, #000002 100%)",
+    inputCSS:"background:rgba(255,255,255,0.04)!important;color:#E8E8F8!important;border:1px solid rgba(180,180,220,0.15)!important;",
+    placeholderCSS:"color:#505068!important;", selectCSS:"background:#04040C;color:#E8E8F8;",
+    scrollThumb:"rgba(192,192,232,0.2)", decoOpacity:1,
+  },
+
+  "academie": {
+    name: "Académie", unlockedBy: { type: "achievement", achievementId: "formation" },
+    bg:"#0A0E18", surface:"rgba(14,18,32,0.97)", surfaceLight:"rgba(20,26,44,0.90)", surfaceCard:"rgba(16,22,38,0.95)",
+    border:"rgba(180,150,60,0.18)", borderLight:"rgba(180,150,60,0.30)", text:"#F0E8C8", textSub:"#C8A850", textMuted:"#786830",
+    accent:"#C8A030", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(200,160,48,0.2)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#0A0E18", filterActive:"rgba(200,160,48,0.15)", filterBorder:"rgba(200,160,48,0.45)",
+    bgGradient:"radial-gradient(ellipse at 30% 10%, #181028 0%, #0A0E18 45%, #050810 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#F0E8C8!important;border:1px solid rgba(180,150,60,0.22)!important;",
+    placeholderCSS:"color:#786830!important;", selectCSS:"background:#0A0E18;color:#F0E8C8;",
+    scrollThumb:"rgba(200,160,48,0.3)", decoOpacity:1,
+  },
+
+  "galerie-blanche": {
+    name: "Galerie Blanche", unlockedBy: { type: "achievement", achievementId: "portfolio" },
+    bg:"#F8F8F8", surface:"rgba(252,252,252,0.98)", surfaceLight:"rgba(245,245,245,0.95)", surfaceCard:"rgba(255,255,255,0.98)",
+    border:"rgba(0,0,0,0.08)", borderLight:"rgba(0,0,0,0.15)", text:"#111111", textSub:"#444444", textMuted:"#888888",
+    accent:"#111111", accentGreen:"#1A9E75", accentPink:"#C2567A", accentGold:"#A07820", danger:"#C0404A",
+    xpTrack:"rgba(0,0,0,0.10)", cardDone:"rgba(26,158,117,0.08)", cardDoneBorder:"rgba(26,158,117,0.25)",
+    inputBg:"rgba(255,255,255,1)", modalBg:"#F0F0F0", filterActive:"rgba(0,0,0,0.06)", filterBorder:"rgba(0,0,0,0.3)",
+    bgGradient:"linear-gradient(180deg, #FFFFFF 0%, #F8F8F8 100%)",
+    inputCSS:"background:#FFFFFF!important;color:#111111!important;border:1px solid rgba(0,0,0,0.15)!important;",
+    placeholderCSS:"color:#888888!important;", selectCSS:"background:#F8F8F8;color:#111111;",
+    scrollThumb:"rgba(0,0,0,0.15)", decoOpacity:0.3,
+  },
+
+  "aurore": {
+    name: "Aurore", unlockedBy: { type: "achievement", achievementId: "one_year" },
+    bg:"#100818", surface:"rgba(22,12,32,0.97)", surfaceLight:"rgba(32,18,45,0.90)", surfaceCard:"rgba(26,14,38,0.95)",
+    border:"rgba(255,150,200,0.15)", borderLight:"rgba(255,150,200,0.28)", text:"#FFE8F8", textSub:"#E890C8", textMuted:"#885878",
+    accent:"#E060A0", accentGreen:"#7EECC4", accentPink:"#F9A8D4", accentGold:"#FCD34D", danger:"#F87171",
+    xpTrack:"rgba(224,96,160,0.18)", cardDone:"rgba(126,236,196,0.08)", cardDoneBorder:"rgba(126,236,196,0.25)",
+    inputBg:"rgba(255,255,255,0.05)", modalBg:"#100818", filterActive:"rgba(224,96,160,0.15)", filterBorder:"rgba(224,96,160,0.5)",
+    bgGradient:"radial-gradient(ellipse at 50% 0%, #3A0830 0%, #100818 35%, #180828 60%, #200A10 100%)",
+    inputCSS:"background:rgba(255,255,255,0.05)!important;color:#FFE8F8!important;border:1px solid rgba(255,150,200,0.2)!important;",
+    placeholderCSS:"color:#885878!important;", selectCSS:"background:#100818;color:#FFE8F8;",
+    scrollThumb:"rgba(224,96,160,0.3)", decoOpacity:1,
+  },
+};
+
+// Helper : récupère un thème exclusif par id
+function getExclusiveTheme(id) {
+  return EXCLUSIVE_THEMES[id] || null;
+}
+
+// Helper : récupère tous les thèmes débloqués par skill
+function getSkillThemeId(skillId) {
+  var entry = Object.entries(EXCLUSIVE_THEMES).find(function(kv) {
+    return kv[1].unlockedBy && kv[1].unlockedBy.type === "skill" && kv[1].unlockedBy.skillId === skillId;
+  });
+  return entry ? entry[0] : null;
+}
+
+// Helper : récupère tous les thèmes débloqués par achievement
+function getAchievementThemeId(achievementId) {
+  var entry = Object.entries(EXCLUSIVE_THEMES).find(function(kv) {
+    return kv[1].unlockedBy && kv[1].unlockedBy.type === "achievement" && kv[1].unlockedBy.achievementId === achievementId;
+  });
+  return entry ? entry[0] : null;
+}
 
 // Retourne le nombre de pénalités dues depuis la dernière date d'activité
 // decayState = { lastActivityDate: "DD/MM/YYYY", appliedWeeks: number }
@@ -4194,11 +4540,310 @@ function GalerieTracker({ gallery, setGallery, skills, tasks, history, initialLi
   );
 }
 
+// ─── SUCCES PAGE ─────────────────────────────────────────────────────────────
+// ─── ACHIEVEMENTS ────────────────────────────────────────────────────────────
+var ACHIEVEMENTS = [
+  { id:"sketchbook_1",   category:"Création physique",  type:"manual", mystery:false, emoji:"📒", label:"1er Sketchbook",             desc:"Tu as rempli ton premier sketchbook de A à Z.", themeId:null },
+  { id:"sketchbook_2",   category:"Création physique",  type:"manual", mystery:false, emoji:"📓", label:"2e Sketchbook",              desc:"Deuxième carnet rempli. La régularité est là.", themeId:"pages-jaunies" },
+  { id:"sketchbook_3",   category:"Création physique",  type:"manual", mystery:false, emoji:"📔", label:"3e Sketchbook",              desc:"Trois carnets terminés. Une vraie collection.", themeId:"papier-craft" },
+  { id:"carnet_aquarelle",category:"Création physique", type:"manual", mystery:false, emoji:"🎨", label:"Carnet d'aquarelle",         desc:"Un carnet entier dédié à l'aquarelle.", themeId:null },
+  { id:"carnet_rando",   category:"Création physique",  type:"manual", mystery:false, emoji:"🌿", label:"Carnet de randonnée",        desc:"Plantes, paysages et croquis du terrain.", themeId:"foret-botanique" },
+  { id:"30days",         category:"Création physique",  type:"manual", mystery:false, emoji:"🗓️", label:"30 Days Challenge",          desc:"Un défi de dessin quotidien complété jusqu'au bout.", themeId:"encre-de-minuit" },
+  { id:"formation",      category:"Défi & progression", type:"manual", mystery:false, emoji:"🎓", label:"Formation complète",         desc:"Une formation artistique menée jusqu'à la fin.", themeId:"academie" },
+  { id:"jam",            category:"Défi & progression", type:"manual", mystery:false, emoji:"🤝", label:"Jam artistique",             desc:"Participation à un jam ou une collaboration.", themeId:null },
+  { id:"post_public",    category:"Défi & progression", type:"manual", mystery:false, emoji:"📢", label:"Première œuvre publique",    desc:"Tu as partagé une création en public pour la première fois.", themeId:null },
+  { id:"vente_don",      category:"Défi & progression", type:"manual", mystery:false, emoji:"🎁", label:"Vente ou don",               desc:"Une œuvre vendue ou offerte.", themeId:null },
+  { id:"5_mediums",      category:"Collection",         type:"manual", mystery:false, emoji:"🖌️", label:"5 médiums explorés",        desc:"Tu as testé au moins 5 médiums artistiques différents.", themeId:null },
+  { id:"10_dtiys",       category:"Collection",         type:"auto",   mystery:false, emoji:"🖼️", label:"10 DTIYS",                   desc:"Dix challenges DTIYS complétés.", themeId:null },
+  { id:"10_refs",        category:"Collection",         type:"auto",   mystery:true,  emoji:"❓", label:"???",                        desc:"???", themeId:null },
+  { id:"one_year",       category:"Temps long",         type:"auto",   mystery:true,  emoji:"❓", label:"???",                        desc:"???", themeId:"aurore" },
+  { id:"100_sessions",   category:"Temps long",         type:"auto",   mystery:true,  emoji:"❓", label:"???",                        desc:"???", themeId:null },
+  { id:"artbook_3",      category:"Créations & projets",type:"manual", mystery:false, emoji:"📚", label:"3 ArtBooks étudiés",         desc:"Trois ArtBooks analysés et étudiés en profondeur.", themeId:null },
+  { id:"mental_canvas",  category:"Créations & projets",type:"manual", mystery:false, emoji:"🌐", label:"Projet Mental Canvas",       desc:"Un projet réalisé sur Mental Canvas.", themeId:null },
+  { id:"niche",          category:"Créations & projets",type:"manual", mystery:false, emoji:"💡", label:"Niche artistique",           desc:"Tu as identifié et défini ta niche pour un business.", themeId:null },
+  { id:"portfolio",      category:"Créations & projets",type:"manual", mystery:false, emoji:"💼", label:"Portfolio construit",        desc:"Ton portfolio artistique est en ligne et complet.", themeId:"galerie-blanche" },
+  { id:"prints_5",       category:"Créations & projets",type:"manual", mystery:false, emoji:"🖨️", label:"5 prints à vendre",          desc:"Cinq designs de prints différents créés pour la vente.", themeId:null },
+  { id:"tattoo_3",       category:"Créations & projets",type:"manual", mystery:false, emoji:"✒️", label:"3 designs tatouage",         desc:"Trois designs de tatouage créés.", themeId:null },
+  { id:"illustrations_officielles_3",category:"Créations & projets",type:"manual",mystery:false,emoji:"✦",label:"3 illustrations officielles",desc:"Trois grandes illustrations finalisées et officielles.", themeId:null },
+  { id:"illustrations_10",category:"Créations & projets",type:"manual",mystery:false,emoji:"🎭", label:"10 illustrations",           desc:"Dix illustrations complètes dans ton portfolio.", themeId:null },
+  { id:"stickers",       category:"Créations & projets",type:"manual", mystery:false, emoji:"🌸", label:"Planche de stickers",        desc:"Une planche de stickers créée et finalisée.", themeId:null },
+];
+var ACHIEVEMENT_CATEGORIES = ["Création physique","Défi & progression","Collection","Temps long","Créations & projets"];
+
+function SuccesPage({ skills, history, challenges, achievements, onAchievementsChange, activeExclusiveTheme, onActivateTheme, showToast }) {
+
+  const [achDetailId,   setAchDetailId]   = useState(null);
+  const [uploadingId,   setUploadingId]   = useState(null);
+  const [confirmUnlock, setConfirmUnlock] = useState(null);
+  const photoInputRef = useRef(null);
+
+  var earnedBadges = BADGES.filter(function(b) {
+    var cc = {};
+    return b.check(history, cc, skills, null, null, [], challenges);
+  }).length;
+
+  var allAchievements = achievements; // Les auto sont déjà mergés dans ArtTrackerApp
+
+  var totalAch = ACHIEVEMENTS.length;
+  var unlockedAch = ACHIEVEMENTS.filter(function(a) { return !!allAchievements[a.id]; }).length;
+
+  function uploadPhoto(achId, file) {
+    setUploadingId(achId);
+    var fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", "Studio");
+    fd.append("cloud_name", "dt5wa6tqm");
+    fetch("https://api.cloudinary.com/v1_1/dt5wa6tqm/image/upload", { method:"POST", body:fd })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.secure_url) {
+          onAchievementsChange(function(prev) {
+            var entry = prev[achId] || { unlockedAt: new Date().toLocaleDateString("fr-FR"), photos: [] };
+            return Object.assign({}, prev, { [achId]: Object.assign({}, entry, { photos: [...(entry.photos||[]), data.secure_url] }) });
+          });
+          showToast("Photo ajoutée !");
+        }
+      })
+      .catch(function() { showToast("Erreur upload"); })
+      .finally(function() { setUploadingId(null); });
+  }
+
+  function removePhoto(achId, url) {
+    onAchievementsChange(function(prev) {
+      var entry = prev[achId];
+      if (!entry) return prev;
+      return Object.assign({}, prev, { [achId]: Object.assign({}, entry, { photos: (entry.photos||[]).filter(function(p) { return p !== url; }) }) });
+    });
+  }
+
+  var detailAch  = achDetailId ? ACHIEVEMENTS.find(function(a) { return a.id === achDetailId; }) : null;
+  var detailData = detailAch ? (allAchievements[detailAch.id] || null) : null;
+  var detailTheme = detailAch && detailAch.themeId ? EXCLUSIVE_THEMES[detailAch.themeId] : null;
+  var detailThemeActive = detailAch && activeExclusiveTheme === detailAch.themeId;
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+
+      {/* Modal détail achievement */}
+      {detailAch && detailData && (
+        <div onClick={function() { setAchDetailId(null); }} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 20px 0"}}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={{background:THEME.surface,border:"0.5px solid "+THEME.accentGold+"55",borderRadius:24,padding:"1.4rem 1.2rem",width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto",display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{fontSize:28,width:48,height:48,borderRadius:14,background:THEME.accentGold+"18",border:"1px solid "+THEME.accentGold+"44",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{detailAch.emoji}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:700,color:THEME.text}}>{detailAch.label}</div>
+                <div style={{fontSize:10,color:THEME.accentGold}}>Débloqué le {detailData.unlockedAt}</div>
+              </div>
+              <button onClick={function() { setAchDetailId(null); }} style={{border:"none",background:"none",cursor:"pointer",fontSize:18,color:THEME.textMuted}}>✕</button>
+            </div>
+
+            <div style={{fontSize:12,color:THEME.textSub,lineHeight:1.6,padding:"8px 10px",borderRadius:10,background:THEME.surfaceLight,border:"0.5px solid "+THEME.border}}>
+              {detailAch.desc}
+            </div>
+
+            {detailTheme && (
+              <div style={{padding:"10px 12px",borderRadius:12,background:THEME.accentGold+"10",border:"1px solid "+THEME.accentGold+"33",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:600,color:THEME.accentGold,marginBottom:2}}>Thème "{detailTheme.name}"</div>
+                  <div style={{fontSize:11,color:THEME.textMuted}}>Change l'ambiance complète de l'app.</div>
+                </div>
+                <button
+                  onClick={function() {
+                    if (detailThemeActive) { onActivateTheme(null); showToast("Thème désactivé"); }
+                    else { onActivateTheme(detailAch.themeId); showToast("Thème activé !"); }
+                  }}
+                  style={{padding:"6px 12px",borderRadius:20,border:"1px solid "+THEME.accentGold+"66",background:detailThemeActive?THEME.accentGold:THEME.accentGold+"18",color:detailThemeActive?"#000":THEME.accentGold,fontSize:11,cursor:"pointer",fontWeight:600,flexShrink:0}}>
+                  {detailThemeActive ? "Actif" : "Activer"}
+                </button>
+              </div>
+            )}
+
+            <div>
+              <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,marginBottom:8,letterSpacing:"0.5px"}}>PHOTOS SOUVENIR</div>
+              {(detailData.photos||[]).length === 0 && (
+                <div style={{fontSize:12,color:THEME.textMuted,textAlign:"center",padding:"14px",borderRadius:12,border:"1px dashed "+THEME.border}}>
+                  Ajoute une photo de ton oeuvre !
+                </div>
+              )}
+              {(detailData.photos||[]).length > 0 && (
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:8}}>
+                  {(detailData.photos||[]).map(function(url, i) {
+                    return (
+                      <div key={i} style={{position:"relative",borderRadius:10,overflow:"hidden",aspectRatio:"1"}}>
+                        <img src={url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                        <button onClick={function() { removePhoto(detailAch.id, url); }} style={{position:"absolute",top:4,right:4,width:20,height:20,borderRadius:"50%",border:"none",background:"rgba(0,0,0,0.6)",color:"#fff",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>✕</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <input ref={photoInputRef} type="file" accept="image/*" style={{display:"none"}}
+                onChange={function(e) {
+                  var file = e.target.files && e.target.files[0];
+                  if (file) uploadPhoto(detailAch.id, file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                onClick={function() { photoInputRef.current && photoInputRef.current.click(); }}
+                disabled={!!uploadingId}
+                style={{width:"100%",padding:"8px",borderRadius:12,border:"1px dashed "+THEME.accentGold+"55",background:THEME.accentGold+"08",color:uploadingId?THEME.textMuted:THEME.accentGold,fontSize:12,cursor:uploadingId?"wait":"pointer",fontWeight:500}}>
+                {uploadingId ? "Upload en cours..." : "Ajouter une photo"}
+              </button>
+            </div>
+
+            {!detailData.auto && (
+              <button
+                onClick={function() {
+                  onAchievementsChange(function(prev) { var n=Object.assign({},prev); delete n[detailAch.id]; return n; });
+                  if (detailAch.themeId && activeExclusiveTheme === detailAch.themeId) onActivateTheme(null);
+                  setAchDetailId(null);
+                }}
+                style={{padding:"7px",borderRadius:12,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:11,cursor:"pointer"}}>
+                Annuler cet achievement
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmation validation */}
+      {confirmUnlock && (function() {
+        var ach = ACHIEVEMENTS.find(function(a) { return a.id === confirmUnlock; });
+        if (!ach) return null;
+        return (
+          <div onClick={function() { setConfirmUnlock(null); }} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 1.2rem"}}>
+            <div onClick={function(e) { e.stopPropagation(); }} style={{background:THEME.surface,border:"1px solid "+THEME.accentGold+"44",borderRadius:20,padding:"1.4rem 1.2rem",width:"100%",maxWidth:400,display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{fontSize:28,textAlign:"center"}}>{ach.emoji}</div>
+              <div style={{fontSize:14,fontWeight:700,color:THEME.text,textAlign:"center"}}>{ach.label}</div>
+              <div style={{fontSize:12,color:THEME.textMuted,textAlign:"center",lineHeight:1.5}}>
+                Tu confirmes avoir accompli cet achievement ?{ach.themeId ? " Un thème exclusif sera débloqué !" : ""}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button
+                  onClick={function() {
+                    var now = new Date().toLocaleDateString("fr-FR");
+                    onAchievementsChange(function(prev) {
+                      return Object.assign({}, prev, { [ach.id]: { unlockedAt: now, photos: [] } });
+                    });
+                    showToast(ach.themeId ? "Débloqué ! Thème disponible." : ach.label+" débloqué !");
+                    setConfirmUnlock(null);
+                  }}
+                  style={{flex:1,padding:"9px",borderRadius:14,border:"1px solid "+THEME.accentGold+"66",background:THEME.accentGold,color:"#000",fontSize:13,cursor:"pointer",fontWeight:700}}>
+                  Confirmer
+                </button>
+                <button onClick={function() { setConfirmUnlock(null); }} style={{padding:"9px 14px",borderRadius:14,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:13,cursor:"pointer"}}>Annuler</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Header */}
+      <div style={{background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"}}>
+        <div style={{fontSize:16,fontWeight:700,color:THEME.text,fontFamily:"'Playfair Display',serif",marginBottom:4}}>Succès</div>
+        <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+          <div style={{fontSize:12,color:THEME.textMuted}}><span style={{fontWeight:600,color:THEME.accent}}>{earnedBadges}</span>/{BADGES.length} badges</div>
+          <div style={{fontSize:12,color:THEME.textMuted}}><span style={{fontWeight:600,color:THEME.accentGold}}>{unlockedAch}</span>/{totalAch} achievements</div>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div style={{background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"}}>
+        <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:10}}>
+          Badges — {earnedBadges}/{BADGES.length}
+        </div>
+        <BadgeGrid evaluated={BADGES.map(function(b) {
+          var cc = {};
+          return Object.assign({}, b, { earned: b.check(history, cc, skills, null, null, [], challenges) });
+        })}/>
+      </div>
+
+      {/* Achievements par catégorie */}
+      {ACHIEVEMENT_CATEGORIES.map(function(cat) {
+        var catItems = ACHIEVEMENTS.filter(function(a) { return a.category === cat; });
+        return (
+          <div key={cat} style={{background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"}}>
+            <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:12}}>{cat}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {catItems.map(function(ach) {
+                var unlocked = !!allAchievements[ach.id];
+                var data = allAchievements[ach.id] || null;
+                var isMystery = ach.mystery && !unlocked;
+                var themeActive = ach.themeId && activeExclusiveTheme === ach.themeId;
+                var photoCount = unlocked && data ? (data.photos||[]).length : 0;
+                return (
+                  <div key={ach.id}
+                    onClick={unlocked ? function() { setAchDetailId(ach.id); } : undefined}
+                    style={{
+                      display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:14,
+                      background: unlocked ? THEME.surfaceCard : THEME.surfaceLight,
+                      border:"1px solid "+(unlocked ? (themeActive ? THEME.accentGold+"99" : THEME.accentGold+"33") : THEME.border),
+                      opacity: unlocked ? 1 : 0.65,
+                      cursor: unlocked ? "pointer" : "default",
+                      transition:"all 0.2s",
+                      boxShadow: themeActive ? "0 0 14px "+THEME.accentGold+"44" : "none",
+                    }}>
+                    <div style={{width:42,height:42,borderRadius:12,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,
+                      background: unlocked ? THEME.accentGold+"18" : THEME.surfaceCard,
+                      border:"1px solid "+(unlocked ? THEME.accentGold+"44" : THEME.border),
+                    }}>
+                      {isMystery ? "🔒" : ach.emoji}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2,flexWrap:"wrap"}}>
+                        <div style={{fontSize:13,fontWeight:600,color:unlocked?THEME.text:THEME.textMuted}}>{isMystery ? "???" : ach.label}</div>
+                        {unlocked && ach.themeId && (
+                          <span style={{fontSize:9,fontWeight:700,color:THEME.accentGold,background:THEME.accentGold+"15",border:"1px solid "+THEME.accentGold+"44",borderRadius:20,padding:"1px 7px"}}>
+                            {themeActive ? "ACTIF" : "THEME"}
+                          </span>
+                        )}
+                        {unlocked && ach.type === "auto" && (
+                          <span style={{fontSize:9,color:THEME.accentGreen,background:THEME.accentGreen+"12",border:"1px solid "+THEME.accentGreen+"33",borderRadius:20,padding:"1px 7px"}}>AUTO</span>
+                        )}
+                        {unlocked && photoCount > 0 && (
+                          <span style={{fontSize:9,color:THEME.textMuted}}>📷 {photoCount}</span>
+                        )}
+                      </div>
+                      <div style={{fontSize:11,color:THEME.textMuted,lineHeight:1.4}}>
+                        {isMystery ? "Continue à progresser pour le découvrir !" : ach.desc}
+                      </div>
+                      {unlocked && data && data.unlockedAt && (
+                        <div style={{fontSize:10,color:THEME.accentGold,marginTop:2}}>Débloqué le {data.unlockedAt}</div>
+                      )}
+                    </div>
+                    {!unlocked && ach.type === "manual" && (
+                      <button
+                        onClick={function(e) { e.stopPropagation(); setConfirmUnlock(ach.id); }}
+                        style={{fontSize:10,padding:"5px 10px",borderRadius:20,border:"1px solid "+THEME.accentGold+"55",background:THEME.accentGold+"12",color:THEME.accentGold,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>
+                        Valider
+                      </button>
+                    )}
+                    {unlocked && <div style={{fontSize:14,color:THEME.accentGold,opacity:0.5,flexShrink:0}}>›</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── ACHIEVEMENTS (fin) ───────────────────────────────────────────────────────
+
 function ArtTrackerApp(props) {
   const onHome = props.onHome;
   const [themeMode, setThemeMode] = useState("light");
-  // Applique le thème au global THEME au render
-  Object.assign(THEME, THEMES[themeMode]);
+  const [activeExclusiveTheme, setActiveExclusiveTheme] = useState(null);
+  // Applique le thème au global THEME au render — exclusif prioritaire sur light/dark
+  Object.assign(THEME, activeExclusiveTheme && EXCLUSIVE_THEMES[activeExclusiveTheme]
+    ? EXCLUSIVE_THEMES[activeExclusiveTheme]
+    : THEMES[themeMode]);
+  const [skillThemePopup, setSkillThemePopup] = useState(null); // {skillId, themeId}
+  const [achievements, setAchievements] = useState({});       // {achievementId: {unlockedAt, photos:[]}}
+  const [focusSkills,  setFocusSkills]  = useState([]);       // array d'IDs, max 3
   const [skills,         setSkills]         = useState(null);
   const [tasks,          setTasks]          = useState(null);
   const [themes,         setThemes]         = useState(DEFAULT_THEMES);
@@ -4235,7 +4880,6 @@ function ArtTrackerApp(props) {
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [page,           setPage]           = useState("tracker");
   const [histFilterSkill, setHistFilterSkill] = useState(null);
-  const [histFilterMonth, setHistFilterMonth] = useState(null);
 
   // Migration : ajoute les compétences par défaut manquantes sans toucher aux données existantes
   function migrateSkills(savedSkills) {
@@ -4281,6 +4925,9 @@ function ArtTrackerApp(props) {
       storage.get(PROJECTS_KEY),
       storage.get(DECAY_KEY),
       storage.get(GLOBAL_XP_KEY),
+      storage.get("art_tracker_exclusive_theme"),
+      storage.get(ACHIEVEMENTS_KEY),
+      storage.get(FOCUS_KEY),
     ]).then(function(results) {
       function val(i) { return results[i].status === "fulfilled" ? results[i].value : null; }
       var d     = val(0);
@@ -4293,6 +4940,9 @@ function ArtTrackerApp(props) {
       var gal   = val(7);
       var proj  = val(8);
       var decay = val(9);
+      var excl  = val(11);
+      var ach   = val(12);
+      var foc   = val(13);
 
       if (d) {
         setSkills(migrateSkills(d.skills));
@@ -4318,6 +4968,9 @@ function ArtTrackerApp(props) {
       if (gal)   setGallery(gal);
       if (proj)  setProjects(proj);
       if (decay) setDecayState(decay);
+      if (excl && EXCLUSIVE_THEMES[excl]) setActiveExclusiveTheme(excl);
+      if (ach)  setAchievements(ach);
+      if (foc && Array.isArray(foc)) setFocusSkills(foc);
 
       setLoaded(true);
     }).catch(function() {
@@ -4348,6 +5001,60 @@ function ArtTrackerApp(props) {
   useEffect(function() { if (loaded) storage.set(PROJECTS_KEY,projects); }, [projects,loaded]);
   useEffect(function() { if (loaded&&decayState) storage.set(DECAY_KEY,decayState); }, [decayState,loaded]);
   useEffect(function() { if (loaded) storage.set("art_tracker_theme_v1", themeMode); }, [themeMode,loaded]);
+  useEffect(function() { if (loaded) storage.set("art_tracker_exclusive_theme", activeExclusiveTheme || ""); }, [activeExclusiveTheme,loaded]);
+  useEffect(function() { if (loaded) storage.set(ACHIEVEMENTS_KEY, achievements); }, [achievements,loaded]);
+  useEffect(function() { if (loaded) storage.set(FOCUS_KEY, focusSkills); }, [focusSkills,loaded]);
+
+  // Détection automatique des achievements auto — déclenche un toast au premier déblocage
+  useEffect(function() {
+    if (!loaded || !history || !challenges) return;
+
+    var now = new Date().toLocaleDateString("fr-FR");
+    var toUnlock = [];
+
+    // 10 DTIYS
+    var dtiysCount = (challenges.dtiys||[]).filter(function(d) { return d.done; }).length;
+    if (dtiysCount >= 10 && !achievements["10_dtiys"]) toUnlock.push("10_dtiys");
+
+    // 100 sessions
+    if (history.length >= 100 && !achievements["100_sessions"]) toUnlock.push("100_sessions");
+
+    // 10 références
+    var refCount = history.filter(function(e) { return e.taskName && e.taskName.toLowerCase().includes("référence"); }).length;
+    if (refCount >= 10 && !achievements["10_refs"]) toUnlock.push("10_refs");
+
+    // 1 an de pratique
+    if (history.length > 0 && !achievements["one_year"]) {
+      var oldest = history[history.length - 1];
+      if (oldest && oldest.date) {
+        var parts = oldest.date.split(" ")[0].split("/").map(Number);
+        if (parts.length === 3) {
+          var firstDate = new Date(parts[2], parts[1]-1, parts[0]);
+          if ((new Date() - firstDate) / 86400000 >= 365) toUnlock.push("one_year");
+        }
+      }
+    }
+
+    if (toUnlock.length === 0) return;
+
+    setAchievements(function(prev) {
+      var next = Object.assign({}, prev);
+      toUnlock.forEach(function(id) {
+        if (!next[id]) next[id] = { unlockedAt: now, photos: [], auto: true };
+      });
+      return next;
+    });
+
+    // Toast pour chaque nouveau déblocage
+    toUnlock.forEach(function(id) {
+      var ach = ACHIEVEMENTS.find(function(a) { return a.id === id; });
+      if (ach) {
+        setTimeout(function() {
+          showToast((ach.themeId ? "✦ " : "") + "Achievement débloqué : " + (ach.mystery ? "???" : ach.label) + " !", true);
+        }, 500);
+      }
+    });
+  }, [loaded, history, challenges]);
 
   function showToast(msg, isBadge) {
     setToast({msg:msg, isBadge:!!isBadge});
@@ -4355,6 +5062,13 @@ function ArtTrackerApp(props) {
   }
   function addTheme(name) { if (!themes.includes(name)) setThemes(function(p) { return [...p,name]; }); }
   function toggleFav(id) { setFavorites(function(p) { return {...p,[id]:!p[id]}; }); }
+  function toggleFocus(id) {
+    setFocusSkills(function(prev) {
+      if (prev.includes(id)) return prev.filter(function(x) { return x !== id; });
+      if (prev.length >= 3) { showToast("Maximum 3 skills en focus."); return prev; }
+      return [...prev, id];
+    });
+  }
 
   // Vérifie et applique les pénalités de déclin au chargement
   useEffect(function() {
@@ -4447,13 +5161,27 @@ function ArtTrackerApp(props) {
     var undoneMains = mains.filter(function(t) { return !(completionCount[t.id]>0); });
     var undoneWarmups = warmups.filter(function(t) { return !(completionCount[t.id]>0); });
 
-    // Compétence la moins avancée pour orienter le choix
-    var sortedSkills = (skills||[]).slice().sort(function(a,b) { return ((a.level-1)*100+a.xp)-((b.level-1)*100+b.xp); });
-    var weakestSkillId = sortedSkills.length>0 ? sortedSkills[0].id : null;
+    // Compétence prioritaire : focus en premier, sinon la plus faible
+    var sortedByPriority = (skills||[]).slice().sort(function(a,b) {
+      var aFocus = focusSkills.includes(a.id) ? 0 : 1;
+      var bFocus = focusSkills.includes(b.id) ? 0 : 1;
+      if (aFocus !== bFocus) return aFocus - bFocus;
+      return ((a.level-1)*100+a.xp)-((b.level-1)*100+b.xp);
+    });
+    var prioritySkillId = sortedByPriority.length>0 ? sortedByPriority[0].id : null;
 
-    // Favoriser les tâches liées à la compétence la plus faible
-    var priorityMains = weakestSkillId
-      ? undoneMains.filter(function(t) { return t.rewards.some(function(r) { return r.skillId===weakestSkillId && !r.optional; }); })
+    // Tâches liées à la skill prioritaire (focus ou la plus faible)
+    var priorityMains = prioritySkillId
+      ? undoneMains.filter(function(t) { return t.rewards.some(function(r) { return r.skillId===prioritySkillId && !r.optional; }); })
+      : [];
+
+    // Si focus actif, aussi boost les tâches liées aux autres skills focus
+    var focusMains = focusSkills.length > 0
+      ? undoneMains.filter(function(t) {
+          return t.rewards.some(function(r) {
+            return focusSkills.includes(r.skillId) && !r.optional;
+          });
+        })
       : [];
 
     function pick(arr, fallback) {
@@ -4462,7 +5190,8 @@ function ArtTrackerApp(props) {
     }
 
     var w = pick(undoneWarmups, warmups);
-    var m = pick(priorityMains.length>0 ? priorityMains : undoneMains, mains.filter(function(t) { return t.id!==(w?w.id:null); }));
+    var mainPool = priorityMains.length>0 ? priorityMains : focusMains.length>0 ? focusMains : undoneMains;
+    var m = pick(mainPool, mains.filter(function(t) { return t.id!==(w?w.id:null); }));
     setSessionTasks([w,m].filter(Boolean));
     setSessionMode(true);
   }
@@ -4677,7 +5406,19 @@ function ArtTrackerApp(props) {
     if (filterTheme!=="Tous"&&t.theme!==filterTheme) return false;
     if (diffFilter!=="Tous"&&DIFF[t.id]!==diffFilter) return false;
     return true;
-  }).sort(function(a,b) { return ((completionCount[a.id]>0?1:0)-(completionCount[b.id]>0?1:0)); });
+  }).sort(function(a,b) {
+    // 1. Tâches non complétées avant les complétées
+    var aDone = completionCount[a.id]>0 ? 1 : 0;
+    var bDone = completionCount[b.id]>0 ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    // 2. Parmi les non complétées : tâches des skills en focus en premier
+    if (focusSkills.length > 0) {
+      var aFocus = a.rewards.some(function(r) { return focusSkills.includes(r.skillId) && !r.optional; }) ? 0 : 1;
+      var bFocus = b.rewards.some(function(r) { return focusSkills.includes(r.skillId) && !r.optional; }) ? 0 : 1;
+      if (aFocus !== bFocus) return aFocus - bFocus;
+    }
+    return 0;
+  });
 
   var totalPages = Math.ceil(filtered.length/TASKS_PER_PAGE);
   var displayedTasks = sessionMode&&sessionTasks ? sessionTasks : filtered.slice(taskPage*TASKS_PER_PAGE,(taskPage+1)*TASKS_PER_PAGE);
@@ -4697,7 +5438,136 @@ function ArtTrackerApp(props) {
     padding:"1.1rem 1.2rem",
   };
 
-  var pageAccents = {tracker:THEME.accent,projects:THEME.accentGreen,challenges:THEME.accentPink,generateur:THEME.accentGold,stats:"#93C5FD"};
+  // ─── Calcul du conseil du jour ─────────────────────────────────────────────
+  var adviceMsg = (function() {
+    if (!skills || !history || !loaded) return null;
+    var today = new Date(); today.setHours(0,0,0,0);
+
+    // Calcule les jours depuis la dernière session pour une skill donnée
+    function daysSince(skillId) {
+      for (var i = 0; i < history.length; i++) {
+        var e = history[i];
+        var hasSkill = (e.gains||[]).some(function(g) {
+          return g.skillId === skillId || (skills.find(function(s){return s.id===skillId;}) && g.name === skills.find(function(s){return s.id===skillId;}).name);
+        });
+        if (hasSkill && e.date) {
+          var parts = e.date.split(" ")[0].split("/").map(Number);
+          if (parts.length === 3) {
+            var d = new Date(parts[2], parts[1]-1, parts[0]);
+            return Math.floor((today - d) / 86400000);
+          }
+        }
+      }
+      return null; // jamais pratiquée
+    }
+
+    // Sessions des 30 derniers jours par skill
+    function sessionsLast30(skillId) {
+      return history.filter(function(e) {
+        if (!e.date) return false;
+        var parts = e.date.split(" ")[0].split("/").map(Number);
+        if (parts.length !== 3) return false;
+        var d = new Date(parts[2], parts[1]-1, parts[0]);
+        if ((today - d) / 86400000 > 30) return false;
+        return (e.gains||[]).some(function(g) {
+          return g.skillId === skillId || (skills.find(function(s){return s.id===skillId;}) && g.name === skills.find(function(s){return s.id===skillId;}).name);
+        });
+      }).length;
+    }
+
+    // Sessions des 14 derniers jours par skill
+    function sessionsLast14(skillId) {
+      return history.filter(function(e) {
+        if (!e.date) return false;
+        var parts = e.date.split(" ")[0].split("/").map(Number);
+        if (parts.length !== 3) return false;
+        var d = new Date(parts[2], parts[1]-1, parts[0]);
+        if ((today - d) / 86400000 > 14) return false;
+        return (e.gains||[]).some(function(g) {
+          return g.skillId === skillId || (skills.find(function(s){return s.id===skillId;}) && g.name === skills.find(function(s){return s.id===skillId;}).name);
+        });
+      }).length;
+    }
+
+    // PRIORITÉ 1 — Skill abandonnée : au moins 1 session dans les 30 derniers jours avant abandon, puis silence 10+ jours
+    for (var i = 0; i < skills.length; i++) {
+      var sk = skills[i];
+      var ds = daysSince(sk.id);
+      if (ds !== null && ds >= 10) {
+        var s30 = sessionsLast30(sk.id);
+        // Elle avait de l'activité récemment (entre 10 et 30 jours) mais plus maintenant
+        if (s30 === 0) {
+          // vérifie qu'elle avait bien des sessions il y a entre 10 et 40 jours
+          var hadActivity = history.some(function(e) {
+            if (!e.date) return false;
+            var parts = e.date.split(" ")[0].split("/").map(Number);
+            if (parts.length !== 3) return false;
+            var d = new Date(parts[2], parts[1]-1, parts[0]);
+            var daysAgo = (today - d) / 86400000;
+            if (daysAgo < 10 || daysAgo > 40) return false;
+            return (e.gains||[]).some(function(g) {
+              return g.skillId === sk.id || g.name === sk.name;
+            });
+          });
+          if (hadActivity) {
+            var focusMention = focusSkills.includes(sk.id) ? " (en focus)" : "";
+            return { icon:"⏸", text: sk.name+focusMention+" n'a pas bougé depuis "+ds+" jours — une petite session pour reprendre le fil ?", color: THEME.accentPink, skColor: sk.color };
+          }
+        }
+      }
+    }
+
+    // PRIORITÉ 2 — Déséquilibre focus : une skill focus domine, une autre focus est négligée
+    if (focusSkills.length >= 2) {
+      var focusData = focusSkills.map(function(id) {
+        return { id:id, sk: skills.find(function(s){return s.id===id;}), sessions: sessionsLast14(id) };
+      }).filter(function(f) { return !!f.sk; });
+      var totalFocusSessions = focusData.reduce(function(sum,f){return sum+f.sessions;},0);
+      if (totalFocusSessions >= 4) {
+        var dominant = focusData.reduce(function(a,b){return a.sessions>b.sessions?a:b;});
+        var neglected = focusData.reduce(function(a,b){return a.sessions<b.sessions?a:b;});
+        if (dominant.sessions > 0 && neglected.sessions === 0 && dominant.id !== neglected.id) {
+          return { icon:"⚖️", text:"Tu focuses beaucoup sur "+dominant.sk.name+" — "+neglected.sk.name+" (aussi en focus) n'a pas bougé depuis 14 jours.", color: THEME.accentGold, skColor: neglected.sk.color };
+        }
+      }
+    }
+
+    // PRIORITÉ 3 — Skill avec XP mais négligée 14+ jours (hors focus)
+    var neglectedSkill = null;
+    var maxNeglect = 13;
+    for (var j = 0; j < skills.length; j++) {
+      var skj = skills[j];
+      if (focusSkills.includes(skj.id)) continue;
+      var totalXp = (skj.level-1)*100 + skj.xp;
+      if (totalXp === 0) continue; // jamais commencée
+      var dsj = daysSince(skj.id);
+      if (dsj !== null && dsj > maxNeglect) {
+        maxNeglect = dsj;
+        neglectedSkill = skj;
+      }
+    }
+    if (neglectedSkill) {
+      return { icon:"💤", text: neglectedSkill.name+" n'a pas bougé depuis "+maxNeglect+" jours — tu veux la remettre en focus ?", color: THEME.accent, skColor: neglectedSkill.color };
+    }
+
+    // PRIORITÉ 4 — Skill jamais commencée (1 chance sur 3)
+    var neverStarted = skills.filter(function(sk) { return (sk.level-1)*100+sk.xp === 0 && daysSince(sk.id) === null; });
+    if (neverStarted.length > 0 && Math.random() < 0.33) {
+      var pick = neverStarted[Math.floor(Math.random() * neverStarted.length)];
+      return { icon:"🌱", text:"Tu n'as jamais essayé "+pick.name+" — quelques tâches faciles pour commencer ?", color: THEME.accentGreen, skColor: pick.color };
+    }
+
+    // PRIORITÉ 5 — Tout va bien
+    var positiveMessages = [
+      "Belle régularité cette semaine ✦",
+      "Bon équilibre entre tes compétences !",
+      "Tu progresses bien, continue comme ça ✦",
+      focusSkills.length > 0 ? "Focus actif sur "+focusSkills.map(function(id){var s=skills.find(function(x){return x.id===id;});return s?s.name:"";}).filter(Boolean).join(", ")+" — bonne session !" : null,
+    ].filter(Boolean);
+    return { icon:"✦", text: positiveMessages[Math.floor(Math.random() * positiveMessages.length)], color: THEME.accentGreen, skColor: THEME.accentGreen };
+  })();
+
+  var pageAccents = {tracker:THEME.accent,projects:THEME.accentGreen,challenges:THEME.accentPink,generateur:THEME.accentGold,stats:"#93C5FD",succes:THEME.accentGold};
   var accent = pageAccents[page] || THEME.accent;
 
   if (!loaded) return (
@@ -4725,12 +5595,13 @@ function ArtTrackerApp(props) {
 
   // Pages de navigation
   var navItems = [
-    {id:"tracker", label:"🎨 Tracker"},
-    {id:"projects", label:"🗂 Projets"},
+    {id:"tracker",    label:"🎨 Tracker"},
+    {id:"projects",   label:"🗂 Projets"},
     {id:"challenges", label:"🏆 Challenges"},
-    {id:"galerie", label:"🖼️ Galerie"},
+    {id:"galerie",    label:"🖼️ Galerie"},
     {id:"generateur", label:"✨ Générateur"},
-    {id:"stats", label:"📊 Stats"},
+    {id:"stats",      label:"📊 Stats"},
+    {id:"succes",     label:"🏅 Succès"},
   ];
 
   return (
@@ -5046,6 +5917,20 @@ function ArtTrackerApp(props) {
         );
       })()}
 
+      {/* Conseil du jour */}
+      {adviceMsg && page === "tracker" && (
+        <div style={{
+          display:"flex",alignItems:"flex-start",gap:10,padding:"10px 14px",
+          borderRadius:14,
+          background:adviceMsg.skColor+"0D",
+          border:"1px solid "+adviceMsg.skColor+"28",
+          transition:"all 0.3s",
+        }}>
+          <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{adviceMsg.icon}</span>
+          <div style={{fontSize:12,color:THEME.textSub,lineHeight:1.5,flex:1}}>{adviceMsg.text}</div>
+        </div>
+      )}
+
       {/* Navigation */}
       <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingBottom:2}}>
         {navItems.map(function(item) {
@@ -5071,24 +5956,116 @@ function ArtTrackerApp(props) {
       {page==="galerie" && <GalerieTracker gallery={gallery} setGallery={setGallery} skills={skills} tasks={tasks||[]} history={history} initialLightbox={galleryOpenImg} key={galleryOpenImg?galleryOpenImg.id:0}/>}
       {page==="generateur" && <GenerateurIA onAddTask={addGeneratedTask} themes={themes} skills={skills}/>}
 
+      {/* Page : Succès */}
+      {page==="succes" && <SuccesPage
+        skills={skills||[]}
+        history={history}
+        challenges={challenges}
+        achievements={achievements}
+        onAchievementsChange={setAchievements}
+        activeExclusiveTheme={activeExclusiveTheme}
+        onActivateTheme={setActiveExclusiveTheme}
+        showToast={showToast}
+      />}
+
       {/* Page : Tracker */}
       {page==="tracker" && (
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
+          {/* Popup thème exclusif skill */}
+          {skillThemePopup && (function() {
+            var sk = (skills||[]).find(function(s) { return s.id === skillThemePopup.skillId; });
+            var th = EXCLUSIVE_THEMES[skillThemePopup.themeId];
+            if (!sk || !th) return null;
+            var isActive = activeExclusiveTheme === skillThemePopup.themeId;
+            return (
+              <div onClick={function() { setSkillThemePopup(null); }} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 1.2rem"}}>
+                <div onClick={function(e) { e.stopPropagation(); }} style={{background:THEME.modalBg,border:"1px solid "+sk.color+"44",borderRadius:20,padding:"1.4rem 1.2rem",width:"100%",maxWidth:400,display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:sk.color+"18",border:"1px solid "+sk.color+"44",display:"flex",alignItems:"center",justifyContent:"center",color:sk.color,flexShrink:0}}>
+                      <SkillIcon id={sk.id} emoji={sk.emoji} size={20}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:700,color:THEME.text}}>{sk.name} — Niveau 10</div>
+                      <div style={{fontSize:11,color:sk.color,fontWeight:600}}>Thème "{th.name}" débloqué ✦</div>
+                    </div>
+                    <button onClick={function() { setSkillThemePopup(null); }} style={{marginLeft:"auto",border:"none",background:"none",cursor:"pointer",fontSize:18,color:THEME.textMuted}}>✕</button>
+                  </div>
+                  <div style={{padding:"10px 12px",borderRadius:12,background:sk.color+"10",border:"1px solid "+sk.color+"22",fontSize:12,color:THEME.textSub,lineHeight:1.6}}>
+                    Ce thème change l'ambiance complète de l'application — fond, couleurs, surfaces et accents.
+                    Tu peux le désactiver à tout moment depuis ce même menu.
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    {isActive ? (
+                      <button onClick={function() { setActiveExclusiveTheme(null); setSkillThemePopup(null); showToast("Thème désactivé"); }} style={{flex:1,padding:"9px",borderRadius:14,border:"1px solid "+THEME.border,background:THEME.surfaceLight,color:THEME.textMuted,fontSize:13,cursor:"pointer",fontWeight:500}}>
+                        Désactiver le thème
+                      </button>
+                    ) : (
+                      <button onClick={function() { setActiveExclusiveTheme(skillThemePopup.themeId); setSkillThemePopup(null); showToast("✦ Thème \""+th.name+"\" activé !"); }} style={{flex:1,padding:"9px",borderRadius:14,border:"1px solid "+sk.color+"66",background:sk.color,color:"#fff",fontSize:13,cursor:"pointer",fontWeight:700}}>
+                        Activer "{th.name}"
+                      </button>
+                    )}
+                    <button onClick={function() { setSkillThemePopup(null); }} style={{padding:"9px 14px",borderRadius:14,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:13,cursor:"pointer"}}>Annuler</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Skills grid */}
           <div style={block}>
-            <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:12}}>Compétences</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6}}>Compétences</div>
+              {focusSkills.length > 0 && (
+                <div style={{fontSize:10,color:THEME.accentGold,fontWeight:600}}>📌 {focusSkills.length}/3 en focus</div>
+              )}
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
               {skills.map(function(sk) {
+                var themeId = getSkillThemeId(sk.id);
+                var hasTheme = themeId && sk.level >= 10;
+                var isThemeActive = activeExclusiveTheme === themeId;
+                var isFocus = focusSkills.includes(sk.id);
+                var canFocus = isFocus || focusSkills.length < 3;
                 return (
-                  <div key={sk.id} className="skill-card" style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 11px",border:"1px solid "+sk.color+"22"}}>
+                  <div key={sk.id} className="skill-card"
+                    onClick={hasTheme ? function() { setSkillThemePopup({skillId:sk.id,themeId:themeId}); } : undefined}
+                    style={{
+                      background: isFocus ? sk.color+"12" : THEME.surfaceCard,
+                      borderRadius:12, padding:"10px 11px",
+                      border:"1px solid "+(isFocus ? sk.color+"66" : isThemeActive ? sk.color+"88" : sk.color+"22"),
+                      cursor: hasTheme ? "pointer" : "default",
+                      position:"relative", transition:"box-shadow 0.2s, border 0.2s",
+                      boxShadow: isFocus ? "0 2px 12px "+sk.color+"22" : isThemeActive ? "0 0 12px "+sk.color+"44" : "none",
+                    }}>
+                    {/* Bouton 📌 focus */}
+                    <button
+                      onClick={function(e) { e.stopPropagation(); toggleFocus(sk.id); }}
+                      title={isFocus ? "Retirer du focus" : canFocus ? "Mettre en focus" : "Maximum 3 skills en focus"}
+                      style={{
+                        position:"absolute", top:5, right: hasTheme ? 22 : 5,
+                        border:"none", background:"none", cursor: canFocus ? "pointer" : "default",
+                        fontSize:11, lineHeight:1, padding:"2px",
+                        opacity: isFocus ? 1 : canFocus ? 0.22 : 0.08,
+                        transition:"opacity 0.15s, transform 0.15s",
+                        filter: isFocus ? "drop-shadow(0 0 3px "+sk.color+")" : "none",
+                      }}
+                      onMouseEnter={function(e) { if (canFocus) { e.currentTarget.style.opacity="0.7"; e.currentTarget.style.transform="scale(1.2)"; } }}
+                      onMouseLeave={function(e) { e.currentTarget.style.opacity=isFocus?"1":canFocus?"0.22":"0.08"; e.currentTarget.style.transform="scale(1)"; }}
+                    >📌</button>
+                    {/* Indicateur thème lvl 10 */}
+                    {hasTheme && (
+                      <div title={isThemeActive?"Thème actif":"Thème disponible"} style={{position:"absolute",top:6,right:7,fontSize:10,color:isThemeActive?sk.color:THEME.textMuted,fontWeight:700,opacity:isThemeActive?1:0.5}}>
+                        {isThemeActive ? "✦" : "◇"}
+                      </div>
+                    )}
                     <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}>
-                      <div style={{width:28,height:28,borderRadius:"50%",background:sk.color+"18",border:"1px solid "+sk.color+"33",display:"flex",alignItems:"center",justifyContent:"center",color:sk.color,flexShrink:0}}>
+                      <div style={{width:28,height:28,borderRadius:"50%",background:sk.color+"18",border:"1px solid "+(isFocus ? sk.color+"55" : sk.color+"33"),display:"flex",alignItems:"center",justifyContent:"center",color:sk.color,flexShrink:0}}>
                         <SkillIcon id={sk.id} emoji={sk.emoji} size={14}/>
                       </div>
                       <div>
-                        <div style={{fontSize:12,fontWeight:500,color:THEME.text,lineHeight:1.2}}>{sk.name}</div>
-                        <div style={{fontSize:10,color:THEME.textMuted}}>Niv. {sk.level}</div>
+                        <div style={{fontSize:12,fontWeight:isFocus?600:500,color:isFocus?sk.color:THEME.text,lineHeight:1.2}}>{sk.name}</div>
+                        <div style={{fontSize:10,color:hasTheme?sk.color:THEME.textMuted,fontWeight:hasTheme?600:400}}>Niv. {sk.level}{hasTheme?" ✦":""}</div>
                       </div>
                     </div>
                     <XpBar xp={sk.xp} color={sk.color}/>
@@ -5218,21 +6195,12 @@ function ArtTrackerApp(props) {
             </div>
             {/* Filtres */}
             {history.length > 0 && (function() {
-              var months = [];
-              history.forEach(function(e) {
-                var m = e.date ? e.date.slice(3,10) : null; // "MM/YYYY"
-                if (m && !months.includes(m)) months.push(m);
-              });
               return (
                 <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
-                  <button onClick={function() { setHistFilterSkill(null); setHistFilterMonth(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+THEME.border,background:(!histFilterSkill&&!histFilterMonth)?THEME.accent:THEME.surfaceLight,color:(!histFilterSkill&&!histFilterMonth)?"#fff":THEME.textMuted,cursor:"pointer",fontWeight:(!histFilterSkill&&!histFilterMonth)?600:400}}>Tout</button>
+                  <button onClick={function() { setHistFilterSkill(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+THEME.border,background:!histFilterSkill?THEME.accent:THEME.surfaceLight,color:!histFilterSkill?"#fff":THEME.textMuted,cursor:"pointer",fontWeight:!histFilterSkill?600:400}}>Tout</button>
                   {(skills||[]).map(function(sk) {
                     var active = histFilterSkill===sk.id;
-                    return <button key={sk.id} onClick={function() { setHistFilterSkill(active?null:sk.id); setHistFilterMonth(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+(active?sk.color:THEME.border),background:active?sk.color+"22":THEME.surfaceLight,color:active?sk.color:THEME.textMuted,cursor:"pointer",fontWeight:active?600:400}}>{sk.name}</button>;
-                  })}
-                  {months.map(function(m) {
-                    var active = histFilterMonth===m;
-                    return <button key={m} onClick={function() { setHistFilterMonth(active?null:m); setHistFilterSkill(null); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+(active?THEME.accent:THEME.border),background:active?THEME.accent+"22":THEME.surfaceLight,color:active?THEME.accent:THEME.textMuted,cursor:"pointer",fontWeight:active?600:400}}>📅 {m}</button>;
+                    return <button key={sk.id} onClick={function() { setHistFilterSkill(active?null:sk.id); }} style={{fontSize:10,padding:"2px 9px",borderRadius:20,border:"1px solid "+(active?sk.color:THEME.border),background:active?sk.color+"22":THEME.surfaceLight,color:active?sk.color:THEME.textMuted,cursor:"pointer",fontWeight:active?600:400}}>{sk.name}</button>;
                   })}
                 </div>
               );
@@ -5242,7 +6210,6 @@ function ArtTrackerApp(props) {
               {(function() {
                 var filtered = history.filter(function(e) {
                   if (histFilterSkill) return (e.gains||[]).some(function(g) { return g.skillId===histFilterSkill || (skills||[]).find(function(s){return s.id===histFilterSkill&&s.name===g.name;}); });
-                  if (histFilterMonth) return e.date && e.date.slice(3,10)===histFilterMonth;
                   return true;
                 });
                 if (filtered.length===0) return <div style={{color:THEME.textMuted,fontSize:13}}>Aucune entrée pour ce filtre.</div>;
@@ -5277,8 +6244,10 @@ function ArtTrackerApp(props) {
             setHistory([]);
             setCC({});
             setGlobalXp(0);
+            setActiveExclusiveTheme(null);
             storage.set(STORAGE_KEY, {skills:DEFAULT_SKILLS, tasks:freshTasks, history:[], completionCount:{}});
             storage.set(GLOBAL_XP_KEY, 0);
+            storage.set("art_tracker_exclusive_theme", "");
           }
           if (opts.type==="tasks") {
             var freshTasks2 = injectMedium(DEFAULT_TASKS);
@@ -5290,12 +6259,23 @@ function ArtTrackerApp(props) {
             storage.set(GLOBAL_XP_KEY, 0);
           }
           if (opts.type==="skills") {
+            var resetIds = opts.skillIds;
             setSkills(function(prev) {
-              var reset = prev.map(function(sk) { return opts.skillIds.includes(sk.id)?{...sk,level:1,xp:0}:sk; });
+              var reset = prev.map(function(sk) { return resetIds.includes(sk.id)?{...sk,level:1,xp:0}:sk; });
               return migrateSkills(reset);
             });
             setGlobalXp(0);
             storage.set(GLOBAL_XP_KEY, 0);
+            // Si le thème actif correspond à une skill réinitialisée, le désactiver
+            if (activeExclusiveTheme) {
+              var activeThemeDef = EXCLUSIVE_THEMES[activeExclusiveTheme];
+              if (activeThemeDef && activeThemeDef.unlockedBy && activeThemeDef.unlockedBy.type === "skill") {
+                if (resetIds.includes(activeThemeDef.unlockedBy.skillId)) {
+                  setActiveExclusiveTheme(null);
+                  storage.set("art_tracker_exclusive_theme", "");
+                }
+              }
+            }
           }
           setShowReset(false);
           showToast("Réinitialisation effectuée.");
