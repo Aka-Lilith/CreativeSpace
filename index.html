@@ -2863,83 +2863,8 @@ function StatsBlock(props) {
   }
 
   var block = {background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"};
-  var tabIds = ["radar","heat","timer","progress","stats","badges"];
-  var tabLabels = {radar:"📡 Radar",heat:"🔥 Activité",timer:"⏱ Timer",progress:"📈 Progression",stats:"📊 Stats",badges:"🏅 Badges "+earnedCount+"/"+BADGES.length};
-
-  function ProgressionChart() {
-    // Reconstitue l'XP total cumulé jour par jour depuis l'historique
-    if (history.length===0) return <div style={{textAlign:"center",color:THEME.textMuted,fontSize:13,padding:"2rem 0"}}>Complète des tâches pour voir ta progression !</div>;
-
-    // Grouper les gains par date
-    var gainsByDate = {};
-    history.forEach(function(e) {
-      var d = e.date ? e.date.split(" ")[0] : null;
-      if (!d) return;
-      var xp = (e.gains||[]).reduce(function(a,g) { return a+g.xp; }, 0);
-      gainsByDate[d] = (gainsByDate[d]||0) + xp;
-    });
-
-    // Trier les dates
-    var sortedDates = Object.keys(gainsByDate).sort(function(a,b) {
-      var pa=a.split("/").map(Number), pb=b.split("/").map(Number);
-      return new Date(pa[2],pa[1]-1,pa[0]) - new Date(pb[2],pb[1]-1,pb[0]);
-    });
-
-    if (sortedDates.length < 2) return <div style={{textAlign:"center",color:THEME.textMuted,fontSize:13,padding:"2rem 0"}}>Continue à dessiner pour voir ta courbe !</div>;
-
-    // Calculer XP cumulé
-    var cumXp = 0;
-    var points = sortedDates.map(function(d) {
-      cumXp += gainsByDate[d];
-      return {date:d, xp:cumXp};
-    });
-
-    var maxXp = points[points.length-1].xp;
-    var W=320, H=120, PAD=10;
-    var n = points.length;
-
-    function px(i) { return PAD + (i/(n-1))*(W-PAD*2); }
-    function py(xp) { return H - PAD - (xp/maxXp)*(H-PAD*2); }
-
-    var pathD = points.map(function(p,i) { return (i===0?"M":"L")+px(i)+","+py(p.xp); }).join(" ");
-    var areaD = pathD + " L"+px(n-1)+","+(H-PAD)+" L"+PAD+","+(H-PAD)+" Z";
-
-    // Labels mois sur l'axe X (1 sur 4)
-    var xLabels = points.filter(function(_,i) { return i===0 || i===n-1 || (n>4 && i%Math.max(1,Math.floor(n/4))===0); });
-
-    return (
-      <div>
-        <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",display:"block"}}>
-          {/* Grille */}
-          {[0.25,0.5,0.75,1].map(function(v,i) {
-            var y = H-PAD-(v*(H-PAD*2));
-            return <line key={i} x1={PAD} y1={y} x2={W-PAD} y2={y} stroke={THEME.surfaceLight} strokeWidth="1"/>;
-          })}
-          {/* Aire */}
-          <path d={areaD} fill="rgba(127,119,221,0.12)"/>
-          {/* Ligne */}
-          <path d={pathD} fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          {/* Point final */}
-          <circle cx={px(n-1)} cy={py(points[n-1].xp)} r="4" fill="#7F77DD"/>
-          {/* Labels axe Y */}
-          {[0,Math.round(maxXp/2),maxXp].map(function(v,i) {
-            return <text key={i} x={PAD-2} y={py(v)+1} textAnchor="end" fontSize="8" fill="#8E7FB0" dominantBaseline="middle">{v}</text>;
-          })}
-          {/* Labels axe X */}
-          {xLabels.map(function(p,i) {
-            var idx = points.indexOf(p);
-            var parts = p.date.split("/");
-            var label = parts[0]+"/"+parts[1];
-            return <text key={i} x={px(idx)} y={H-2} textAnchor="middle" fontSize="8" fill="#8E7FB0">{label}</text>;
-          })}
-        </svg>
-        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:THEME.textMuted,marginTop:6}}>
-          <span>Premier dessin : {points[0].date}</span>
-          <span style={{fontWeight:600,color:"#7F77DD"}}>{maxXp} XP total</span>
-        </div>
-      </div>
-    );
-  }
+  var tabIds = ["radar","heat","timer","stats"];
+  var tabLabels = {radar:"📡 Radar",heat:"🔥 Activité",timer:"⏱ Timer",stats:"📊 Stats"};
 
   function RadarChart() {
     var displayed = skills.filter(function(s) { return s.level > 0 || s.xp > 0 || true; }); // toutes les compétences
@@ -3148,12 +3073,6 @@ function StatsBlock(props) {
       {tab==="radar" && <div style={block}><RadarChart/></div>}
       {tab==="heat" && <div style={block}><HeatMap/></div>}
       {tab==="timer" && <TimerBlock timerData={timerData} onSave={onSaveTimer}/>}
-      {tab==="progress" && (
-        <div style={block}>
-          <div style={{fontSize:12,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.6,marginBottom:12}}>XP cumulé dans le temps</div>
-          <ProgressionChart/>
-        </div>
-      )}
       {tab==="stats" && (
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
@@ -3178,12 +3097,6 @@ function StatsBlock(props) {
               );
             })}
           </div>
-        </div>
-      )}
-      {tab==="badges" && (
-        <div style={block}>
-          <div style={{fontSize:11,color:THEME.textMuted,marginBottom:10}}>{earnedCount} badge{earnedCount>1?"s":""} sur {BADGES.length}</div>
-          <BadgeGrid evaluated={evaluated}/>
         </div>
       )}
     </div>
@@ -4843,6 +4756,7 @@ function ArtTrackerApp(props) {
   const [skillThemePopup, setSkillThemePopup] = useState(null); // {skillId, themeId}
   const [achievements, setAchievements] = useState({});       // {achievementId: {unlockedAt, photos:[]}}
   const [focusSkills,  setFocusSkills]  = useState([]);       // array d'IDs, max 3
+  const [focusLoaded,  setFocusLoaded]  = useState(false);    // évite d'écraser Supabase au démarrage
   const [skills,         setSkills]         = useState(null);
   const [tasks,          setTasks]          = useState(null);
   const [themes,         setThemes]         = useState(DEFAULT_THEMES);
@@ -4970,6 +4884,7 @@ function ArtTrackerApp(props) {
       if (excl && EXCLUSIVE_THEMES[excl]) setActiveExclusiveTheme(excl);
       if (ach)  setAchievements(ach);
       if (foc && Array.isArray(foc)) setFocusSkills(foc);
+      setFocusLoaded(true);
 
       setLoaded(true);
     }).catch(function() {
@@ -5002,7 +4917,7 @@ function ArtTrackerApp(props) {
   useEffect(function() { if (loaded) storage.set("art_tracker_theme_v1", themeMode); }, [themeMode,loaded]);
   useEffect(function() { if (loaded) storage.set("art_tracker_exclusive_theme", activeExclusiveTheme || ""); }, [activeExclusiveTheme,loaded]);
   useEffect(function() { if (loaded) storage.set(ACHIEVEMENTS_KEY, achievements); }, [achievements,loaded]);
-  useEffect(function() { if (loaded) storage.set(FOCUS_KEY, focusSkills); }, [focusSkills,loaded]);
+  useEffect(function() { if (loaded && focusLoaded) storage.set(FOCUS_KEY, focusSkills); }, [focusSkills,loaded,focusLoaded]);
 
   // Détection automatique des achievements auto — déclenche un toast au premier déblocage
   useEffect(function() {
@@ -9047,7 +8962,13 @@ function App() {
   }
 
   function handleSignOut() {
-    authSignOut(auth.token).catch(function(){});
+    // Révocation token Supabase (best effort)
+    if (auth && auth.token) {
+      fetch(SUPA_URL + "/auth/v1/logout", {
+        method: "POST",
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + auth.token }
+      }).catch(function(){});
+    }
     supaAuth.userId = null;
     supaAuth.token  = null;
     localStorage.removeItem("lilith_auth");
