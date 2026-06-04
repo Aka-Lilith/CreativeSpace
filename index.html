@@ -8874,6 +8874,101 @@ function DiyTrackerApp(props) {
 
 // ════════════════════════════════════════════════════════════════
 // --- APP ROUTER ---
+// ─── AUTH SUPABASE ────────────────────────────────────────────────────────────
+async function authSignUp(email, password) {
+  var res = await fetch(SUPA_URL + "/auth/v1/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SUPA_KEY },
+    body: JSON.stringify({ email: email, password: password }),
+  });
+  return res.json();
+}
+
+async function authSignIn(email, password) {
+  var res = await fetch(SUPA_URL + "/auth/v1/token?grant_type=password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SUPA_KEY },
+    body: JSON.stringify({ email: email, password: password }),
+  });
+  return res.json();
+}
+
+async function authRefresh(refreshToken) {
+  var res = await fetch(SUPA_URL + "/auth/v1/token?grant_type=refresh_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SUPA_KEY },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  return res.json();
+}
+
+async function authSignOut(token) {
+  await fetch(SUPA_URL + "/auth/v1/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SUPA_KEY, "Authorization": "Bearer " + token },
+  });
+}
+
+// ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
+function LoginScreen({ onAuth }) {
+  var [mode,     setMode]     = useState("login");
+  var [email,    setEmail]    = useState("");
+  var [password, setPassword] = useState("");
+  var [error,    setError]    = useState("");
+  var [loading,  setLoading]  = useState(false);
+
+  var bg = "linear-gradient(160deg,#FAF7FF 0%,#EDE0FF 50%,#FCE7F3 100%)";
+
+  async function submit() {
+    if (!email.trim() || !password.trim()) { setError("Email et mot de passe requis."); return; }
+    setLoading(true); setError("");
+    try {
+      var data = mode === "login" ? await authSignIn(email, password) : await authSignUp(email, password);
+      if (data.error || data.error_description || data.msg) {
+        setError(data.error_description || data.msg || data.error || "Erreur inconnue.");
+      } else if (data.access_token) {
+        onAuth({ token: data.access_token, refreshToken: data.refresh_token, userId: data.user.id, email: data.user.email });
+      } else if (mode === "signup" && data.id) {
+        setMode("login"); setError(""); setPassword("");
+        alert("Compte créé ! Vérifie ton email puis connecte-toi.");
+      } else {
+        setError("Réponse inattendue, réessaie.");
+      }
+    } catch(e) { setError("Erreur réseau."); }
+    setLoading(false);
+  }
+
+  var inp = { width:"100%", padding:"11px 14px", borderRadius:12, border:"1px solid #D8B4FE", fontSize:14, fontFamily:"'Inter',sans-serif", outline:"none", background:"rgba(255,255,255,0.7)", color:"#2D2440", boxSizing:"border-box" };
+
+  return (
+    <div style={{minHeight:"100vh",background:bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem 1.2rem"}}>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div style={{width:"100%",maxWidth:380,animation:"fadeUp 0.5s ease both"}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontSize:44,marginBottom:8}}>✦</div>
+          <div style={{fontSize:24,fontWeight:700,color:"#2D2440",fontFamily:"'Playfair Display',serif"}}>Lilith's Creative Studio</div>
+          <div style={{fontSize:13,color:"#7C5CBF",marginTop:6}}>{mode === "login" ? "Connecte-toi pour accéder à tes créations" : "Crée ton compte"}</div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.75)",backdropFilter:"blur(12px)",border:"1px solid #E9D5FF",borderRadius:20,padding:24,display:"flex",flexDirection:"column",gap:14,boxShadow:"0 8px 32px rgba(124,92,191,0.12)"}}>
+          <input style={inp} type="email" placeholder="Email" value={email} onChange={function(e){setEmail(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")submit();}}/>
+          <input style={inp} type="password" placeholder="Mot de passe" value={password} onChange={function(e){setPassword(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")submit();}}/>
+          {error && <div style={{fontSize:12,color:"#DC2626",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,padding:"8px 12px"}}>{error}</div>}
+          <button onClick={submit} disabled={loading} style={{padding:"12px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#7C5CBF,#C4A8FF)",color:"#fff",fontSize:14,fontWeight:600,cursor:loading?"wait":"pointer",opacity:loading?0.7:1}}>
+            {loading ? "..." : mode === "login" ? "Se connecter" : "Créer le compte"}
+          </button>
+          <button onClick={function(){setMode(mode==="login"?"signup":"login");setError("");}} style={{background:"none",border:"none",fontSize:12,color:"#7C5CBF",cursor:"pointer",textDecoration:"underline"}}>
+            {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
+          </button>
+        </div>
+        <div style={{textAlign:"center",marginTop:16,fontSize:11,color:"#9CA3AF"}}>
+          Tes données sont synchronisées en sécurité sur le cloud ☁️
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ROUTER ───────────────────────────────────────────────────────────────
 function App() {
   const [currentModule, setCurrentModule] = useState(function() {
     return sessionStorage.getItem("lilith_module") || null;
@@ -8962,13 +9057,7 @@ function App() {
   }
 
   function handleSignOut() {
-    // Révocation token Supabase (best effort)
-    if (auth && auth.token) {
-      fetch(SUPA_URL + "/auth/v1/logout", {
-        method: "POST",
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + auth.token }
-      }).catch(function(){});
-    }
+    authSignOut(auth && auth.token ? auth.token : "").catch(function(){});
     supaAuth.userId = null;
     supaAuth.token  = null;
     localStorage.removeItem("lilith_auth");
