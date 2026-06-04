@@ -1326,6 +1326,7 @@ function HistoryEntry(props) {
   const skills = props.skills;
   const onAddBonus = props.onAddBonus;
   const onEditDate = props.onEditDate;
+  const onEditNote = props.onEditNote;
   const onRemove = props.onRemove;
   const gallery = props.gallery || [];
   const onGoToGallery = props.onGoToGallery;
@@ -1342,6 +1343,29 @@ function HistoryEntry(props) {
   const [freeBonusSkill, setFreeBonusSkill] = useState(skills && skills[0] ? skills[0].id : null);
   const [freeBonusXp, setFreeBonusXp] = useState(10);
   const [freeBonusConfirm, setFreeBonusConfirm] = useState(false);
+  const [showNote, setShowNote] = useState(false);
+  const [noteText, setNoteText] = useState(entry.sessionNote || "");
+  const [noteTags, setNoteTags] = useState(entry.sessionTags || []);
+
+  var NOTE_TAGS = [
+    {id:"retenir",  label:"📌 À retenir"},
+    {id:"retravailler", label:"🔄 À retravailler"},
+    {id:"decouverte", label:"💡 Découverte"},
+    {id:"maitrise", label:"✅ Maîtrisé"},
+    {id:"doute",    label:"❓ Question / Doute"},
+    {id:"objectif", label:"🎯 Objectif prochain"},
+  ];
+
+  function toggleTag(id) {
+    setNoteTags(function(prev) {
+      return prev.includes(id) ? prev.filter(function(t) { return t !== id; }) : [...prev, id];
+    });
+  }
+
+  function saveNote() {
+    if (onEditNote) onEditNote(entry.id, noteText, noteTags);
+    setShowNote(false);
+  }
 
   function startEditDate() {
     // Convertir DD/MM/YYYY HH:MM en YYYY-MM-DD pour l'input date
@@ -1416,10 +1440,16 @@ function HistoryEntry(props) {
           )}
           <div style={{display:"flex",gap:4,alignItems:"center"}}>
             {unclaimed.length > 0 && (
-              <button onClick={function() { setOpen(function(v) { return !v; }); setShowFreeBonus(false); }} style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accent+"44",background:THEME.accent+"12",color:THEME.accent,cursor:"pointer"}}>{open?"fermer":"bonus"}</button>
+              <button onClick={function() { setOpen(function(v) { return !v; }); setShowFreeBonus(false); setShowNote(false); }} style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accent+"44",background:THEME.accent+"12",color:THEME.accent,cursor:"pointer"}}>{open?"fermer":"bonus"}</button>
             )}
             {onAddBonus && (
-              <button onClick={function() { setShowFreeBonus(function(v) { return !v; }); setOpen(false); setFreeBonusConfirm(false); }} title="Ajouter un XP libre" style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accentGreen+"44",background:showFreeBonus?THEME.accentGreen+"20":THEME.accentGreen+"10",color:THEME.accentGreen,cursor:"pointer",fontWeight:showFreeBonus?600:400}}>+XP</button>
+              <button onClick={function() { setShowFreeBonus(function(v) { return !v; }); setOpen(false); setShowNote(false); setFreeBonusConfirm(false); }} title="Ajouter un XP libre" style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accentGreen+"44",background:showFreeBonus?THEME.accentGreen+"20":THEME.accentGreen+"10",color:THEME.accentGreen,cursor:"pointer",fontWeight:showFreeBonus?600:400}}>+XP</button>
+            )}
+            {onEditNote && (
+              <button
+                onClick={function() { setShowNote(function(v) { return !v; }); setOpen(false); setShowFreeBonus(false); setFreeBonusConfirm(false); if (!showNote) { setNoteText(entry.sessionNote||""); setNoteTags(entry.sessionTags||[]); } }}
+                title="Notes de session"
+                style={{fontSize:11,padding:"2px 7px",borderRadius:20,border:"1px solid "+(entry.sessionNote||entry.sessionTags&&entry.sessionTags.length>0?THEME.accentGold+"55":THEME.border),background:(entry.sessionNote||entry.sessionTags&&entry.sessionTags.length>0)?THEME.accentGold+"12":"transparent",color:(entry.sessionNote||entry.sessionTags&&entry.sessionTags.length>0)?THEME.accentGold:THEME.textMuted,cursor:"pointer"}}>📄</button>
             )}
             {onRemove && !confirmDelete && (
               <button onClick={function() { setConfirmDelete(true); }} title="Annuler et retirer l'XP" style={{fontSize:11,padding:"2px 7px",borderRadius:20,border:"1px solid "+THEME.accentPink+"44",background:THEME.accentPink+"10",color:THEME.accentPink,cursor:"pointer"}}>↩</button>
@@ -1434,7 +1464,49 @@ function HistoryEntry(props) {
           </div>
         </div>
       </div>
-      {/* Panel bonus optionnels existants */}
+      {/* Tags existants */}
+      {(entry.sessionTags||[]).length > 0 && !showNote && (
+        <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:5}}>
+          {(entry.sessionTags||[]).map(function(tid) {
+            var tag = NOTE_TAGS.find(function(t) { return t.id===tid; });
+            return tag ? <span key={tid} style={{fontSize:9,padding:"1px 7px",borderRadius:20,background:THEME.accentGold+"12",border:"1px solid "+THEME.accentGold+"33",color:THEME.accentGold}}>{tag.label}</span> : null;
+          })}
+        </div>
+      )}
+      {/* Note existante */}
+      {entry.sessionNote && !showNote && (
+        <div style={{marginTop:5,fontSize:11,color:THEME.textMuted,fontStyle:"italic",lineHeight:1.4,padding:"4px 8px",borderRadius:6,background:THEME.accentGold+"08",borderLeft:"2px solid "+THEME.accentGold+"44"}}>
+          {entry.sessionNote}
+        </div>
+      )}
+      {/* Panel note */}
+      {showNote && (
+        <div style={{marginTop:8,paddingTop:8,borderTop:"0.5px solid "+THEME.accentGold+"44",display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{fontSize:11,fontWeight:600,color:THEME.accentGold,marginBottom:2}}>Notes de session</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {NOTE_TAGS.map(function(tag) {
+              var active = noteTags.includes(tag.id);
+              return (
+                <button key={tag.id} onClick={function() { toggleTag(tag.id); }}
+                  style={{fontSize:10,padding:"3px 9px",borderRadius:20,cursor:"pointer",border:"1px solid "+(active?THEME.accentGold+"66":THEME.border),background:active?THEME.accentGold+"18":THEME.surfaceLight,color:active?THEME.accentGold:THEME.textMuted,fontWeight:active?600:400}}>
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            value={noteText}
+            onChange={function(e) { setNoteText(e.target.value); }}
+            placeholder="Note libre..."
+            rows={3}
+            style={{width:"100%",padding:"8px 10px",borderRadius:10,border:"1px solid "+THEME.accentGold+"33",background:THEME.inputBg,color:THEME.text,fontSize:12,resize:"vertical",fontFamily:"'Inter',sans-serif",lineHeight:1.5,boxSizing:"border-box",outline:"none"}}
+          />
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={saveNote} style={{flex:1,padding:"6px",borderRadius:12,border:"1px solid "+THEME.accentGold+"66",background:THEME.accentGold+"18",color:THEME.accentGold,fontSize:12,cursor:"pointer",fontWeight:600}}>Enregistrer</button>
+            <button onClick={function() { setShowNote(false); }} style={{padding:"6px 12px",borderRadius:12,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:11,cursor:"pointer"}}>Annuler</button>
+          </div>
+        </div>
+      )}
       {open && unclaimed.length > 0 && (
         <div style={{marginTop:8,paddingTop:8,borderTop:"0.5px solid "+THEME.border}}>
           <div style={{fontSize:11,color:THEME.textMuted,marginBottom:5}}>Bonus retroactif :</div>
@@ -2790,6 +2862,130 @@ function BadgeGrid(props) {
 }
 
 // --- STATS BLOCK ---
+// ─── CALCUL RÉSUMÉ MENSUEL ────────────────────────────────────────────────────
+function computeMonthSummary(year, month, history, skills, timerData, challenges, projects, achievements, earnedDates) {
+  // month = 1-12, year = 4 digits
+  var pad = function(n) { return n < 10 ? "0"+n : ""+n; };
+  var monthStr = pad(month)+"/"+year; // "MM/YYYY"
+
+  function parseDate(dateStr) {
+    if (!dateStr) return null;
+    var d = dateStr.split(" ")[0].split("/").map(Number);
+    if (d.length !== 3) return null;
+    return new Date(d[2], d[1]-1, d[0]);
+  }
+  function inMonth(dateStr) {
+    if (!dateStr) return false;
+    var d = dateStr.split(" ")[0];
+    return d.slice(3) === monthStr; // "DD/MM/YYYY" → slice(3) = "MM/YYYY"
+  }
+
+  // Sessions du mois
+  var monthHistory = history.filter(function(e) { return inMonth(e.date); });
+  var sessionCount = monthHistory.length;
+
+  // Jours uniques dessinés
+  var uniqueDays = new Set(monthHistory.map(function(e) { return e.date ? e.date.split(" ")[0] : null; }).filter(Boolean)).size;
+
+  // Heures timer du mois
+  var timerSessions = (timerData && timerData.sessions || []).filter(function(s) { return inMonth(s.date); });
+  var timerMinutes = timerSessions.reduce(function(sum, s) { return sum + (s.minutes || 0); }, 0);
+  var timerHours = Math.floor(timerMinutes / 60);
+  var timerMins = timerMinutes % 60;
+
+  // XP gagné par skill ce mois
+  var xpBySkill = {};
+  monthHistory.forEach(function(e) {
+    (e.gains || []).forEach(function(g) {
+      var key = g.skillId || g.name;
+      xpBySkill[key] = (xpBySkill[key] || 0) + g.xp;
+    });
+  });
+  var skillXpList = skills.map(function(sk) {
+    var xpGained = xpBySkill[sk.id] || xpBySkill[sk.name] || 0;
+    return { id: sk.id, name: sk.name, color: sk.color, xpGained: xpGained, level: sk.level, xp: sk.xp };
+  }).filter(function(s) { return s.xpGained > 0; }).sort(function(a, b) { return b.xpGained - a.xpGained; });
+
+  // Streak le plus long du mois
+  var monthDays = monthHistory.map(function(e) {
+    return e.date ? e.date.split(" ")[0] : null;
+  }).filter(Boolean);
+  var daySet = new Set(monthDays);
+  var maxStreak = 0;
+  var curStreak = 0;
+  // Parcourt tous les jours du mois
+  var daysInMonth = new Date(year, month, 0).getDate();
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dayKey = pad(d)+"/"+monthStr;
+    if (daySet.has(dayKey)) {
+      curStreak++;
+      maxStreak = Math.max(maxStreak, curStreak);
+    } else {
+      curStreak = 0;
+    }
+  }
+
+  // Tâches complétées (sessions non libres)
+  var tasksCompleted = monthHistory.filter(function(e) { return !e.isLibre; }).length;
+  var sessionLibreCount = monthHistory.filter(function(e) { return !!e.isLibre; }).length;
+
+  // Badges débloqués ce mois
+  var badgesUnlocked = Object.entries(earnedDates || {}).filter(function(kv) {
+    return inMonth(kv[1]);
+  }).map(function(kv) { return kv[0]; });
+
+  // Achievements débloqués ce mois
+  var achievementsUnlocked = Object.entries(achievements || {}).filter(function(kv) {
+    return kv[1] && inMonth(kv[1].unlockedAt ? kv[1].unlockedAt.split("/").reverse().join("/").slice(4)+"/"+kv[1].unlockedAt.slice(3,5)+"/"+kv[1].unlockedAt.slice(0,2) : "");
+  }).map(function(kv) {
+    var ach = ACHIEVEMENTS.find(function(a) { return a.id === kv[0]; });
+    return ach ? ach.label : kv[0];
+  });
+  // Recalcul propre achievements du mois
+  var achievementsThisMonth = Object.entries(achievements || {}).filter(function(kv) {
+    if (!kv[1] || !kv[1].unlockedAt) return false;
+    var parts = kv[1].unlockedAt.split("/");
+    if (parts.length !== 3) return false;
+    return parts[1] === pad(month) && parts[2] === ""+year;
+  }).map(function(kv) {
+    var ach = ACHIEVEMENTS.find(function(a) { return a.id === kv[0]; });
+    return ach ? ach.label : kv[0];
+  });
+
+  // DTIYS complétés ce mois
+  var dtiysThisMonth = (challenges && challenges.dtiys || []).filter(function(d) {
+    return d.done && inMonth(d.date);
+  }).map(function(d) { return d.name; });
+
+  // 30 Days terminés ce mois (30 jours cochés)
+  var thirtyDoneThisMonth = (challenges && challenges.thirty || []).filter(function(c) {
+    var checked = (c.checked || []).length;
+    if (checked < 30) return false;
+    // Vérifie si le 30e jour a été coché ce mois
+    return inMonth(c.date) || (c.completedAt && inMonth(c.completedAt));
+  }).map(function(c) { return c.name; });
+
+  // Projets tracker terminés ce mois
+  var projectsDoneThisMonth = (projects || []).filter(function(p) {
+    return p.status === "done" && p.completedAt && inMonth(p.completedAt);
+  }).map(function(p) { return p.name; });
+
+  return {
+    year, month, monthStr,
+    sessionCount, uniqueDays,
+    timerHours, timerMins,
+    skillXpList,
+    maxStreak,
+    tasksCompleted, sessionLibreCount,
+    badgesUnlocked,
+    achievementsThisMonth,
+    dtiysThisMonth,
+    thirtyDoneThisMonth,
+    projectsDoneThisMonth,
+    hasData: sessionCount > 0,
+  };
+}
+
 function StatsBlock(props) {
   const skills = props.skills;
   const history = props.history;
@@ -2800,8 +2996,13 @@ function StatsBlock(props) {
   const decayState = props.decayState;
   const projects = props.projects || [];
   const challenges = props.challenges || {dtiys:[],thirty:[]};
+  const achievements = props.achievements || {};
   const [tab, setTab] = useState("radar");
   const [earnedDates, setEarnedDates] = useState({});
+  // Mois sélectionné pour le résumé (défaut = mois courant)
+  const [selectedMonth, setSelectedMonth] = useState(function() {
+    var n = new Date(); return { year: n.getFullYear(), month: n.getMonth()+1 };
+  });
 
   // Calcul du statut d'inactivité pour l'affichage
   var lastDate = null;
@@ -2863,8 +3064,8 @@ function StatsBlock(props) {
   }
 
   var block = {background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"};
-  var tabIds = ["radar","heat","timer","stats"];
-  var tabLabels = {radar:"📡 Radar",heat:"🔥 Activité",timer:"⏱ Timer",stats:"📊 Stats"};
+  var tabIds = ["radar","heat","timer","stats","mois"];
+  var tabLabels = {radar:"📡 Radar",heat:"🔥 Activité",timer:"⏱ Timer",stats:"📊 Stats",mois:"📅 Mois"};
 
   function RadarChart() {
     var displayed = skills.filter(function(s) { return s.level > 0 || s.xp > 0 || true; }); // toutes les compétences
@@ -3099,6 +3300,137 @@ function StatsBlock(props) {
           </div>
         </div>
       )}
+      {tab==="mois" && (function() {
+        var MONTH_NAMES = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+        var now = new Date();
+        var summary = computeMonthSummary(selectedMonth.year, selectedMonth.month, history, skills, timerData, challenges, projects, achievements, earnedDates);
+
+        // Limite : ne pas aller avant Mai 2026, ni après le mois courant
+        var MIN_YEAR = 2026; var MIN_MONTH = 5; // Mai 2026
+        var maxBack = 2; // 2 mois en arrière max (mois courant + 2)
+        var minAllowed = (function() {
+          var y = now.getFullYear(); var m = now.getMonth()+1 - maxBack;
+          if (m < 1) { m += 12; y--; }
+          // Ne jamais aller avant Mai 2026
+          if (y < MIN_YEAR || (y === MIN_YEAR && m < MIN_MONTH)) { y = MIN_YEAR; m = MIN_MONTH; }
+          return { year: y, month: m };
+        })();
+
+        function prevMonth() {
+          setSelectedMonth(function(m) {
+            var mo = m.month - 1; var yr = m.year;
+            if (mo < 1) { mo = 12; yr--; }
+            return { year: yr, month: mo };
+          });
+        }
+        function nextMonth() {
+          setSelectedMonth(function(m) {
+            var mo = m.month + 1; var yr = m.year;
+            if (mo > 12) { mo = 1; yr++; }
+            return { year: yr, month: mo };
+          });
+        }
+        var isCurrentMonth = selectedMonth.year === now.getFullYear() && selectedMonth.month === now.getMonth()+1;
+        var isFuture = selectedMonth.year > now.getFullYear() || (selectedMonth.year === now.getFullYear() && selectedMonth.month > now.getMonth()+1);
+        var isPastLimit = selectedMonth.year < 2026 || (selectedMonth.year === 2026 && selectedMonth.month <= 5);
+
+        return (
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{...block,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px"}}>
+              <button onClick={prevMonth} disabled={isPastLimit} style={{border:"none",background:"none",cursor:isPastLimit?"default":"pointer",fontSize:18,color:isPastLimit?THEME.border:THEME.textMuted,padding:"2px 6px"}}>‹</button>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:14,fontWeight:700,color:THEME.text}}>{MONTH_NAMES[selectedMonth.month]} {selectedMonth.year}</div>
+                {isCurrentMonth && <div style={{fontSize:10,color:THEME.accent}}>Mois en cours</div>}
+              </div>
+              <button onClick={nextMonth} disabled={isFuture} style={{border:"none",background:"none",cursor:isFuture?"default":"pointer",fontSize:18,color:isFuture?THEME.border:THEME.textMuted,padding:"2px 6px"}}>›</button>
+            </div>
+
+            {!summary.hasData && (
+              <div style={{...block,textAlign:"center",color:THEME.textMuted,fontSize:13,padding:"2rem"}}>
+                Aucune session ce mois-là.
+              </div>
+            )}
+
+            {summary.hasData && (
+              <React.Fragment>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+                  <div style={{...block,padding:"10px 12px"}}>
+                    <div style={{fontSize:18,fontWeight:700,color:THEME.accent}}>{summary.sessionCount}</div>
+                    <div style={{fontSize:11,color:THEME.textMuted,marginTop:2}}>sessions</div>
+                  </div>
+                  <div style={{...block,padding:"10px 12px"}}>
+                    <div style={{fontSize:18,fontWeight:700,color:"#1D9E75"}}>{summary.uniqueDays} jour{summary.uniqueDays>1?"s":""}</div>
+                    <div style={{fontSize:11,color:THEME.textMuted,marginTop:2}}>jours dessinés</div>
+                  </div>
+                  {(summary.timerHours > 0 || summary.timerMins > 0) && (
+                    <div style={{...block,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:"#E57C1B"}}>{summary.timerHours}h{summary.timerMins>0?summary.timerMins+"m":""}</div>
+                      <div style={{fontSize:11,color:THEME.textMuted,marginTop:2}}>au timer</div>
+                    </div>
+                  )}
+                  {summary.maxStreak > 1 && (
+                    <div style={{...block,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:"#F59E0B"}}>{summary.maxStreak} j 🔥</div>
+                      <div style={{fontSize:11,color:THEME.textMuted,marginTop:2}}>meilleur streak</div>
+                    </div>
+                  )}
+                </div>
+
+                {summary.skillXpList.length > 0 && (
+                  <div style={block}>
+                    <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.5,marginBottom:10}}>XP gagné</div>
+                    {summary.skillXpList.map(function(sk) {
+                      var maxXp = summary.skillXpList[0].xpGained;
+                      return (
+                        <div key={sk.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                          <div style={{fontSize:11,color:sk.color,width:90,flexShrink:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",fontWeight:500}}>{sk.name}</div>
+                          <div style={{flex:1,height:6,background:THEME.surfaceLight,borderRadius:99,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:(sk.xpGained/maxXp*100)+"%",background:sk.color,borderRadius:99}}/>
+                          </div>
+                          <div style={{fontSize:10,color:THEME.textMuted,flexShrink:0,minWidth:40,textAlign:"right"}}>+{sk.xpGained} XP</div>
+                          <div style={{fontSize:10,color:THEME.textMuted,flexShrink:0}}>Niv.{sk.level}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {summary.dtiysThisMonth.length > 0 && (
+                  <div style={block}>
+                    <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.5,marginBottom:8}}>🎨 DTIYS terminés</div>
+                    {summary.dtiysThisMonth.map(function(name,i) { return <div key={i} style={{fontSize:12,color:THEME.text,padding:"4px 0",borderBottom:"0.5px solid "+THEME.border}}>✓ {name}</div>; })}
+                  </div>
+                )}
+
+                {summary.thirtyDoneThisMonth.length > 0 && (
+                  <div style={block}>
+                    <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.5,marginBottom:8}}>🗓️ 30 Days terminés</div>
+                    {summary.thirtyDoneThisMonth.map(function(name,i) { return <div key={i} style={{fontSize:12,color:THEME.text,padding:"4px 0",borderBottom:"0.5px solid "+THEME.border}}>✓ {name}</div>; })}
+                  </div>
+                )}
+
+                {summary.projectsDoneThisMonth.length > 0 && (
+                  <div style={block}>
+                    <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.5,marginBottom:8}}>🗂 Projets terminés</div>
+                    {summary.projectsDoneThisMonth.map(function(name,i) { return <div key={i} style={{fontSize:12,color:THEME.text,padding:"4px 0",borderBottom:"0.5px solid "+THEME.border}}>✓ {name}</div>; })}
+                  </div>
+                )}
+
+                {(summary.achievementsThisMonth.length > 0 || summary.badgesUnlocked.length > 0) && (
+                  <div style={block}>
+                    <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,textTransform:"uppercase",letterSpacing:0.5,marginBottom:8}}>✦ Débloqués ce mois</div>
+                    {summary.achievementsThisMonth.map(function(label,i) { return <div key={"a"+i} style={{fontSize:12,color:THEME.accentGold,padding:"3px 0"}}>⭐ {label}</div>; })}
+                    {summary.badgesUnlocked.map(function(bid,i) {
+                      var b = BADGES.find(function(x) { return x.id===bid; });
+                      return b ? <div key={"b"+i} style={{fontSize:12,color:THEME.accent,padding:"3px 0"}}>{b.emoji} {b.label}</div> : null;
+                    })}
+                  </div>
+                )}
+              </React.Fragment>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -4791,6 +5123,7 @@ function ArtTrackerApp(props) {
   const [showAllThemes,  setShowAllThemes]  = useState(false);
   const [toast,          setToast]          = useState(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
+  const [showMonthlySummary, setShowMonthlySummary] = useState(false);
   const [page,           setPage]           = useState("tracker");
   const [histFilterSkill, setHistFilterSkill] = useState(null);
 
@@ -4969,6 +5302,22 @@ function ArtTrackerApp(props) {
       }
     });
   }, [loaded, history, challenges]);
+
+  // Popup résumé du mois — s'affiche le 1er du mois à la première ouverture
+  useEffect(function() {
+    if (!loaded || !history) return;
+    var today = new Date();
+    if (today.getDate() !== 1) return; // Seulement le 1er du mois
+    var lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
+    var lastYear = today.getMonth() === 0 ? today.getFullYear()-1 : today.getFullYear();
+    var seenKey = "monthly_summary_seen_"+lastYear+"_"+lastMonth;
+    try {
+      if (!sessionStorage.getItem(seenKey)) {
+        sessionStorage.setItem(seenKey, "1");
+        setTimeout(function() { setShowMonthlySummary(true); }, 1500);
+      }
+    } catch(e) {}
+  }, [loaded]);
 
   function showToast(msg, isBadge) {
     setToast({msg:msg, isBadge:!!isBadge});
@@ -5188,6 +5537,14 @@ function ArtTrackerApp(props) {
       });
     });
     showToast("📅 Date modifiée !");
+  }
+
+  function editHistoryNote(entryId, note, tags) {
+    setHistory(function(prev) {
+      return prev.map(function(e) {
+        return e.id===entryId ? {...e, sessionNote: note, sessionTags: tags} : e;
+      });
+    });
   }
 
   function saveTask(task) {
@@ -5831,6 +6188,75 @@ function ArtTrackerApp(props) {
         );
       })()}
 
+      {/* Popup résumé mensuel — 1er du mois */}
+      {showMonthlySummary && (function() {
+        var now = new Date();
+        var lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+        var lastYear  = now.getMonth() === 0 ? now.getFullYear()-1 : now.getFullYear();
+        var MONTH_NAMES = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+        var summary = computeMonthSummary(lastYear, lastMonth, history, skills, timerData, challenges, projects, achievements, {});
+        if (!summary.hasData) return null;
+        return (
+          <div onClick={function() { setShowMonthlySummary(false); }} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 20px 0"}}>
+            <div onClick={function(e) { e.stopPropagation(); }} style={{background:THEME.surface,border:"0.5px solid "+THEME.accentGold+"55",borderRadius:24,padding:"1.4rem 1.2rem",width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto",display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:THEME.text}}>Résumé de {MONTH_NAMES[lastMonth]}</div>
+                  <div style={{fontSize:11,color:THEME.accentGold}}>✦ Bilan du mois écoulé</div>
+                </div>
+                <button onClick={function() { setShowMonthlySummary(false); }} style={{border:"none",background:"none",cursor:"pointer",fontSize:18,color:THEME.textMuted}}>✕</button>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+                <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                  <div style={{fontSize:18,fontWeight:700,color:THEME.accent}}>{summary.sessionCount}</div>
+                  <div style={{fontSize:11,color:THEME.textMuted}}>sessions</div>
+                </div>
+                <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                  <div style={{fontSize:18,fontWeight:700,color:"#1D9E75"}}>{summary.uniqueDays}j dessinés</div>
+                  <div style={{fontSize:11,color:THEME.textMuted}}>jours actifs</div>
+                </div>
+                {summary.maxStreak > 1 && (
+                  <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                    <div style={{fontSize:18,fontWeight:700,color:"#F59E0B"}}>{summary.maxStreak}j 🔥</div>
+                    <div style={{fontSize:11,color:THEME.textMuted}}>meilleur streak</div>
+                  </div>
+                )}
+                {(summary.timerHours > 0 || summary.timerMins > 0) && (
+                  <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+THEME.border}}>
+                    <div style={{fontSize:18,fontWeight:700,color:"#E57C1B"}}>{summary.timerHours}h{summary.timerMins>0?summary.timerMins+"m":""}</div>
+                    <div style={{fontSize:11,color:THEME.textMuted}}>au timer</div>
+                  </div>
+                )}
+              </div>
+              {summary.skillXpList.length > 0 && (
+                <div>
+                  <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,marginBottom:8,letterSpacing:0.5}}>COMPÉTENCES PROGRESSÉES</div>
+                  {summary.skillXpList.slice(0,5).map(function(sk) {
+                    return <div key={sk.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                      <div style={{fontSize:11,color:sk.color,width:80,flexShrink:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sk.name}</div>
+                      <div style={{flex:1,height:5,background:THEME.surfaceLight,borderRadius:99}}>
+                        <div style={{height:"100%",width:(sk.xpGained/summary.skillXpList[0].xpGained*100)+"%",background:sk.color,borderRadius:99}}/>
+                      </div>
+                      <div style={{fontSize:10,color:THEME.textMuted,flexShrink:0}}>+{sk.xpGained} XP</div>
+                    </div>;
+                  })}
+                </div>
+              )}
+              {(summary.dtiysThisMonth.length > 0 || summary.thirtyDoneThisMonth.length > 0 || summary.achievementsThisMonth.length > 0) && (
+                <div style={{fontSize:12,color:THEME.textSub,lineHeight:1.8}}>
+                  {summary.dtiysThisMonth.length > 0 && <div>🎨 {summary.dtiysThisMonth.length} DTIYS terminé{summary.dtiysThisMonth.length>1?"s":""}</div>}
+                  {summary.thirtyDoneThisMonth.length > 0 && <div>🗓️ 30 Days terminé !</div>}
+                  {summary.achievementsThisMonth.length > 0 && <div>⭐ {summary.achievementsThisMonth.length} achievement{summary.achievementsThisMonth.length>1?"s":""} débloqué{summary.achievementsThisMonth.length>1?"s":""}</div>}
+                </div>
+              )}
+              <button onClick={function() { setShowMonthlySummary(false); setPage("stats"); }} style={{padding:"9px",borderRadius:14,border:"1px solid "+THEME.accentGold+"44",background:THEME.accentGold+"12",color:THEME.accentGold,fontSize:12,cursor:"pointer",fontWeight:600}}>
+                Voir le détail complet →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Conseil du jour */}
       {adviceMsg && page === "tracker" && (
         <div style={{
@@ -5861,7 +6287,7 @@ function ArtTrackerApp(props) {
       {/* Page : Challenges */}
       {page==="challenges" && <ChallengesPage challenges={challenges} onChange={setChallenges} skills={skills} onXpGain={applyProjectXp} onXpRemove={removeXp} formations={formations} onFormationsChange={setFormations} onFormationUpdate={updateFormation} onFormationDelete={deleteFormation} onFormationComplete={completeFormation}/>}
 
-      {page==="stats" && <StatsBlock skills={skills} history={history} completionCount={completionCount} tasks={tasks||[]} timerData={timerData} onSaveTimer={setTimerData} decayState={decayState} projects={projects} challenges={challenges}/>}
+      {page==="stats" && <StatsBlock skills={skills} history={history} completionCount={completionCount} tasks={tasks||[]} timerData={timerData} onSaveTimer={setTimerData} decayState={decayState} projects={projects} challenges={challenges} achievements={achievements}/>}
 
       {/* Page : Projets */}
       {page==="projects" && <ProjectsPage projects={projects} skills={skills} onChange={setProjects} onXpGain={applyProjectXp} onXpRemove={removeXp} onEdit={openProjectEdit}/>}
@@ -6129,7 +6555,7 @@ function ArtTrackerApp(props) {
                 if (filtered.length===0) return <div style={{color:THEME.textMuted,fontSize:13}}>Aucune entrée pour ce filtre.</div>;
                 return filtered.map(function(entry) {
                   var task = (tasks||[]).find(function(t) { return t.id===entry.taskId; });
-                  return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}}/>;
+                  return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onEditNote={editHistoryNote} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}}/>;
                 });
               })()}
             </div>
