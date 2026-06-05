@@ -18,6 +18,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>document.write('<scr'+'ipt src="'+(window.location.pathname.startsWith("/CreativeSpace")?"/CreativeSpace":".")+'/generateur.js"><\/scr'+'ipt>');</script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#FAF7FF; font-family:'Inter',sans-serif; }
@@ -622,7 +623,7 @@ function calcDecayPenalties(history, decayState, allDates) {
 const XP_PER_LEVEL   = 100;
 const TASKS_PER_PAGE = 10;
 const COLORS = ["#7F77DD","#1D9E75","#D85A30","#378ADD","#BA7517","#D4537E","#639922","#8B5CF6"];
-const DEFAULT_THEMES = ["Echauffement","Cartoon","Nature","Dark Fairycore","Personnages","Anatomie","Aquarelle/Peinture","Environnements","Theorie couleur","Character Design","Lineart","Methode","Illustration vectorielle","Animation","3D Modeling","Narration visuelle","Pixel Art","Cottagecore","Witchcore","Goblincore","Forestpunk","Mushroomcore","Fantasy médiéval","Mythologie","Steampunk","Solarpunk","Biopunk","Ukiyo-e","Art Nouveau","Comics / BD","Storybook","Sketch urbain","Horreur douce","Dreamcore","Liminal spaces"];
+const DEFAULT_THEMES = ["Echauffement","Nature","Dark Fairycore","Personnages","Anatomie","Aquarelle/Peinture","Environnements","Theorie couleur","Character Design","Lineart","Methode","Illustration vectorielle","Animation","3D Modeling","Narration visuelle","Pixel Art","Cottagecore","Witchcore","Goblincore","Forestpunk","Mushroomcore","Fantasy","Steampunk","Solarpunk","Biopunk","Ukiyo-e","Art Nouveau","Comics / BD","Storybook","Sketch urbain","Horreur douce","Dreamcore","Liminal spaces","Mythologie","Révision"];
 const DIFF_COLOR = { Facile:"#1D9E75", Moyen:"#BA7517", Difficile:"#D4537E" };
 
 const DIFF = {
@@ -3932,308 +3933,13 @@ function ProjectsPage(props) {
   );
 }
 
-// --- GÉNÉRATEUR IA ---
-// --- BANQUE DE GÉNÉRATION LOCALE ---
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function pickN(arr, n) {
-  var copy = arr.slice(); var res = [];
-  for (var i = 0; i < Math.min(n, copy.length); i++) {
-    var idx = Math.floor(Math.random() * copy.length);
-    res.push(copy.splice(idx, 1)[0]);
-  }
-  return res;
-}
-
-var GEN_BANK = {
-
-  // --- Exercices par compétence ---
-  parCompetence: {
-    "Anatomie": [
-      {name:"Étude de mains en 5 positions", desc:"Dessine la même main ouverte, fermée, qui pointe, de profil et de dos. Commence par les formes géométriques simples avant d'affiner les doigts."},
-      {name:"Portraits de 3/4 — construction", desc:"Trace la sphère du crâne, le plan de la mâchoire, puis place les traits avec les lignes de construction. Fais-en 3 consécutifs pour gagner en fluidité."},
-      {name:"Poses dynamiques — ligne d'action", desc:"Trace d'abord une seule courbe d'action, puis construis le personnage autour. L'objectif c'est que la pose soit lisible même réduite à 5cm."},
-      {name:"Étude de pieds sous 3 angles", desc:"Pied de face, de côté, de dos. Commence par un bloc rectangulaire avant d'arrondir. Beaucoup de gens évitent les pieds — c'est le moment de s'y coller."},
-      {name:"Expressions faciales x6", desc:"Joie, tristesse, colère, dégoût, surprise, peur. Garde le même visage de base et change uniquement les sourcils, les yeux et la bouche."},
-      {name:"Corps en 7 têtes — proportions", desc:"Empile 7 rectangles de la hauteur d'une tête. Place les articulations aux bons niveaux : épaules à 1.5, coudes à 3, hanches à 4, genoux à 5.5."},
-      {name:"Torse masculin/féminin — différences", desc:"Dessine les deux faces du même torse en comparatif. Focus sur la largeur des épaules vs hanches, la cage thoracique et la taille."},
-      {name:"Étude de dos — colonne et omoplates", desc:"Le dos est souvent négligé. Dessine-le de dos, de 3/4 avec le bras levé pour voir les omoplates en mouvement."},
-      {name:"Oreilles sous 3 angles", desc:"Frontale, de profil, légèrement de dessous. Commence par la forme en C avant d'ajouter le tragus, l'hélix et l'anthélix."},
-      {name:"Mâchoire et crâne — structure osseuse simplifiée", desc:"Pas besoin d'être médical. Schématise le crâne en sphère + boîte pour la mâchoire. Fais 5 variations de forme : carré, ovale, triangulaire, rond, en losange."},
-    ],
-    "Théorie des couleurs": [
-      {name:"Palette monochrome — 5 valeurs", desc:"Prends une seule teinte et crée 5 variations : deux foncées, une neutre, deux claires. Utilise-les pour faire une sphère ou un cube simple avec ombres et lumières."},
-      {name:"Couleurs chaudes vs froides — même scène", desc:"Dessine une scène simple deux fois. Une version avec une dominante chaude (oranges, rouges), une avec une dominante froide (bleus, verts). Compare l'ambiance."},
-      {name:"Couleurs complémentaires — tension visuelle", desc:"Choisis deux complémentaires (bleu/orange, violet/jaune, rouge/vert). Utilise l'une pour le sujet, l'autre pour le fond. Joue avec les proportions."},
-      {name:"Température de la lumière", desc:"Dessine le même objet éclairé par une lumière chaude (soleil, bougie) et une froide (lune, LED). Les ombres portées changent aussi de température."},
-      {name:"Palette limitée à 3 couleurs", desc:"Choisis 3 couleurs non-consécutives sur la roue chromatique. Tu n'as le droit qu'à ces 3 couleurs + blanc et noir pour toute l'illustration."},
-      {name:"Valeurs en niveaux de gris", desc:"Construis une composition en 5 valeurs de gris uniquement (pas de traits). L'objectif est que l'image soit lisible et contrastée même sans couleur."},
-      {name:"Ambiance jour vs nuit — même lieu", desc:"Dessine la même pièce ou le même paysage en version jour et nuit. La palette change complètement — les ombres sont plus longues, les sources de lumière différentes."},
-      {name:"Couleurs sales vs pures", desc:"Dessine deux versions du même sujet. Une avec des couleurs vives et saturées, une avec des couleurs désaturées et mélangées à du gris. Compare l'effet."},
-    ],
-    "Composition": [
-      {name:"Règle des tiers — placement du sujet", desc:"Divise ton format en 9 cases. Place ton sujet sur l'une des 4 intersections. Évite de centrer. Fais 3 miniatures avec la même scène et 3 placements différents."},
-      {name:"Format vertical vs horizontal", desc:"Dessine le même sujet en portrait et en paysage. Observe comment l'espace négatif change l'ambiance et l'équilibre visuel."},
-      {name:"Lignes directrices", desc:"Crée une image où les éléments (routes, bras, regards, ombres) guident l'œil vers un point focal. Teste avec des flèches d'abord, puis avec le dessin."},
-      {name:"Espace négatif actif", desc:"L'espace vide autour de ton sujet doit avoir une forme intéressante. Dessine d'abord la silhouette, puis remplis le fond pour que les deux formes soient agréables."},
-      {name:"Composition en triangle", desc:"Place tes 3 éléments principaux sur les sommets d'un triangle imaginaire. Ça stabilise la composition et guide l'œil naturellement."},
-      {name:"Premier plan, milieu, arrière-plan", desc:"Crée une scène avec 3 plans distincts. Le premier plan est foncé et détaillé, le milieu est le sujet principal, l'arrière-plan est clair et flou."},
-      {name:"Miniatures de composition x6", desc:"Fais 6 miniatures en 5 minutes chacune pour la même scène. Explore 6 cadres différents. Aucun détail — juste les masses et l'équilibre."},
-    ],
-    "Lumière et Ombres": [
-      {name:"Source de lumière unique — sphère et cube", desc:"Place ta source de lumière en haut à gauche. Dessine une sphère et un cube avec ombre propre, ombre portée et lumière réfléchie (la petite lueur en bas de la sphère)."},
-      {name:"Contre-jour", desc:"Le sujet est devant la source de lumière. Résultat : silhouette sombre avec un halo lumineux sur les bords. Essaie avec un personnage devant une fenêtre."},
-      {name:"Lumière artificielle colorée", desc:"Dessine un visage éclairé par une bougie (lumière orange, chaude) et par un écran (lumière bleue, froide). Les ombres changent aussi de couleur."},
-      {name:"3 sources de lumière — complexité", desc:"Principale (forte, directionnelle), secondaire (plus douce, vient du côté opposé), ambiante (vient de partout, très douce). Applique les 3 sur un objet simple."},
-      {name:"Valeurs sans contours", desc:"Dessine uniquement avec des valeurs, pas de traits. Commence par le fond, puis ajoute les zones sombres, puis les zones claires. Aucune ligne de contour."},
-      {name:"Ombres portées — formes complexes", desc:"Une sphère sur un cube, un cube sur un cylindre. Les ombres portées suivent la forme de la surface sur laquelle elles tombent. Dessine les formes d'ombre précisément."},
-      {name:"Éclairage dramatique — clair-obscur", desc:"80% de l'image dans l'ombre, 20% très éclairé. Un seul point lumineux fort. Inspire-toi du style de Caravage. Idéal pour un visage ou une main tendue vers la lumière."},
-    ],
-    "Aquarelle/Peinture": [
-      {name:"Lavis progressif — humide sur humide", desc:"Mouille entièrement ta feuille. Pose une couleur diluée et laisse-la se répandre. Ajoute une deuxième couleur avant que la première sèche et observe le fondu naturel."},
-      {name:"Réserves blanches", desc:"En aquarelle le blanc c'est le papier. Planifie tes zones de lumière avant de commencer et protège-les. Travaille du clair vers le foncé."},
-      {name:"Textures au sel", desc:"Après avoir posé un lavis humide, saupoudre du sel de cuisine. Observe le résultat en séchant. Parfait pour simuler des textures organiques comme l'écorce ou la pierre."},
-      {name:"Dégrade de couleur — 3 passages", desc:"Premier passage léger et pâle. Deuxième passage quand le premier est sec, plus concentré, sur 2/3 de la zone. Troisième passage uniquement sur 1/3 pour les zones sombres."},
-      {name:"Encre + aquarelle — résistance", desc:"Fais d'abord ton dessin à l'encre imperméable. Laisse sécher. Puis applique des lavis d'aquarelle par-dessus. L'encre résiste, l'aquarelle colore."},
-      {name:"Monochrome — toute une image en une couleur", desc:"Choisis une seule couleur et dilue-la à différentes concentrations pour créer toutes tes valeurs. Parfait pour travailler la lumière sans se perdre dans les couleurs."},
-      {name:"Feuillage et végétation — aplats et détails", desc:"D'abord des aplats larges pour les masses de verdure. Quand c'est sec, ajoute les détails des feuilles individuelles uniquement là où l'œil accroche."},
-    ],
-    "Character Design": [
-      {name:"Silhouette lisible — test à 5cm", desc:"Dessine ton personnage en silhouette noire. Réduis-le à 5cm de hauteur. Il doit encore être reconnaissable et son attitude doit être claire."},
-      {name:"3 designs pour un même perso", desc:"Prends un archétype (sorcière, guerrier, voleur). Crée 3 versions très différentes en gardant le même concept. Joue sur les proportions, les formes, les silhouettes."},
-      {name:"Design de tenue — fonctionnalité et style", desc:"La tenue doit avoir du sens pour le personnage. Un mage en talons hauts ça se justifie ou pas ? Dessine la tenue complète avec les accessoires et explique leur utilité."},
-      {name:"Expressions pour un même perso x5", desc:"Garde exactement les mêmes proportions de visage mais change les expressions : neutre, joyeux, en colère, triste, dédaigneux. Le style doit rester cohérent."},
-      {name:"Fiche de personnage complète", desc:"Silhouette frontale et de dos, gros plan sur le visage, détails des accessoires clés, palette de couleurs officielle (max 5 couleurs). Tout sur une seule page."},
-      {name:"Personnage dans son environnement", desc:"Place ton personnage dans un décor qui lui correspond. Il doit interagir avec quelque chose. L'environnement doit en dire autant sur lui que son design."},
-      {name:"Types de corps — variations", desc:"Prends un archétype et dessine-le en 4 morphologies différentes. Même personnage, même costume, mais les proportions et les formes du corps changent radicalement."},
-    ],
-    "Lineart / Encrage": [
-      {name:"Variation d'épaisseur — poids du trait", desc:"Les contours extérieurs sont épais, les détails intérieurs fins, les zones dans l'ombre plus épaisses. Fais un même dessin deux fois : une fois sans variation, une fois avec."},
-      {name:"Hatching et cross-hatching", desc:"Utilise des séries de lignes parallèles pour créer les valeurs, sans gris ni couleur. Plus les lignes sont serrées, plus la zone est sombre. Fais un objet sphérique uniquement avec des hachures."},
-      {name:"Encrage sans esquisse au crayon", desc:"Trace directement à l'encre. Tu n'as pas le droit d'effacer. L'objectif c'est de gagner en confiance et en fluidité. Les erreurs font partie du résultat."},
-      {name:"Stippling — texture en pointillés", desc:"Crée des valeurs uniquement avec des points. Plus de points = plus sombre. Aucune ligne. Idéal pour les textures organiques comme la peau, la pierre ou les fruits."},
-      {name:"Textures à l'encre — 5 matières", desc:"Remplis 5 rectangles avec des textures différentes à l'encre : bois, tissu, métal, fourrure, pierre. Chacune doit être clairement reconnaissable."},
-      {name:"Contours expressifs", desc:"Dessine le même sujet avec 3 types de traits : nerveux et rapide, lent et précis, épais et gras. Compare les personnalités que chaque style crée."},
-    ],
-    "Perspective": [
-      {name:"Cube en perspective 1 point de fuite", desc:"Place ton point de fuite au centre de l'horizon. Dessine 5 cubes à différentes positions : au-dessus, en dessous, à gauche, à droite de ton point de fuite."},
-      {name:"Chambre en perspective 2 points de fuite", desc:"Dessine l'intérieur d'une pièce avec 2 points de fuite sur la ligne d'horizon. Ajoute un meuble simple, une fenêtre et une porte."},
-      {name:"Perspective atmosphérique", desc:"Plus c'est loin, plus c'est pâle, flou et bleuté. Dessine un paysage avec 4 plans. Chaque plan doit être plus clair et moins détaillé que le précédent."},
-      {name:"Personnage en raccourci", desc:"Dessine un bras ou une jambe qui pointe vers toi. Le raccourci (foreshortening) est une des choses les plus difficiles en anatomie. Commence par des cylindres."},
-    ],
-    "Backgrounds": [
-      {name:"Intérieur cosy — sources de lumière", desc:"Une pièce avec au moins 2 sources de lumière différentes (fenêtre + lampe). Les objets ont des ombres cohérentes avec chaque source. Pas besoin de tout détailler."},
-      {name:"Végétation — masses et détails sélectifs", desc:"D'abord les grandes masses sombres de feuillage. Puis les zones éclairées. Enfin quelques feuilles individuelles uniquement là où l'œil accroche naturellement."},
-      {name:"Architecture fantastique", desc:"Combine des éléments architecturaux réels (arcs, colonnes, dômes) avec des éléments organiques (racines, cristaux, lianes). La gravité peut être approximative."},
-      {name:"Paysage avec profondeur", desc:"3 plans distincts. Premier plan sombre et détaillé. Milieu : ton sujet principal. Arrière-plan : clair, flou, peu de détails. Utilise la couleur et les valeurs pour créer la profondeur."},
-      {name:"Scène nocturne — sources lumineuses multiples", desc:"Nuit = ambiance sombre globale mais avec des sources de lumière précises (lune, fenêtres, lanternes). Chaque source a sa couleur et sa portée."},
-      {name:"Ruines envahies par la végétation", desc:"Des murs effondrés, des colonnes brisées, des racines qui envahissent tout. Travaille le contraste entre les lignes dures de l'architecture et les formes organiques des plantes."},
-    ],
-    "Style personnel": [
-      {name:"Même sujet en 3 styles différents", desc:"Choisis un sujet simple (champignon, visage, fleur). Dessine-le en réaliste, en cartoon très stylisé, et dans ton style personnel actuel. Compare les 3."},
-      {name:"Analyse d'un artiste que tu admires", desc:"Prends une illustration que tu aimes. Identifie : la palette (max 5 couleurs ?), la façon dont les contours sont faits, la simplification des formes. Maintenant copie-la intentionnellement."},
-      {name:"Série cohérente — 3 illustrations", desc:"3 illustrations différentes mais qui forment clairement une série. Même palette, même style de trait, même ambiance. C'est ce qui crée un portfolio cohérent."},
-      {name:"Redesign d'un perso existant dans ton style", desc:"Prends un personnage connu et redesigne-le complètement dans ton univers visuel. Garde l'essence du personnage mais fais-en quelque chose de tien."},
-    ],
-    "Illustration vectorielle": [
-      {name:"Formes géométriques — composition minimaliste", desc:"Utilise uniquement des cercles, rectangles et triangles. Crée une scène reconnaissable (paysage, visage, animal) avec le minimum de formes possible."},
-      {name:"Flat design — illustration sans ombres", desc:"Couleurs plates, pas d'ombre, pas de dégradé. L'information de profondeur vient uniquement de la superposition des formes et des couleurs."},
-      {name:"Icônes cohérentes — série de 6", desc:"Crée 6 icônes sur le même thème (nature, outils, météo...). Même épaisseur de trait, même style, même taille. La cohérence est plus importante que chaque icône individuelle."},
-      {name:"Portrait en formes géométriques", desc:"Décompose un visage en formes géométriques pures. Chaque zone (front, nez, joues, menton) devient une forme simple. Utilise la couleur pour différencier les plans."},
-    ],
-    "3D Modeling": [
-      {name:"Modélise un objet du quotidien", desc:"Choisis un objet simple autour de toi (tasse, bouteille, chaussure). Modélise-le dans Blender en low poly, applique un matériau de base et fais un rendu simple."},
-      {name:"Scène nature morte low poly", desc:"Arrange 3 à 5 objets simples sur une table. Travaille la composition et l'éclairage autant que la modélisation. Une bonne lumière compense des formes simples."},
-      {name:"Personnage low poly original", desc:"Crée un personnage de ton invention en gardant un maximum de 1500 faces. Silhouette reconnaissable, proportions cohérentes, matériaux distincts pour chaque zone."},
-      {name:"Architecture fantastique low poly", desc:"Une tour, une cabane magique, un temple ruiné. Structure simple mais avec du caractère. Ajoute des détails décoratifs géométriques (créneaux, fenêtres en ogive, etc)."},
-      {name:"Créature Blender — forme organique", desc:"Parte d'une sphère et sculpt ou modélise une créature simple. Pas besoin de topologie parfaite — l'objectif c'est l'expressivité de la silhouette."},
-    ],
-    "Narration visuelle": [
-      {name:"Séquence de 4 cases — sans texte", desc:"Raconte une micro-histoire en 4 cases sans aucun mot. Les émotions, les actions et la conclusion doivent être compréhensibles uniquement par l'image."},
-      {name:"Planche muette — entrée dans un lieu", desc:"Montre un personnage qui entre dans un endroit nouveau. 4 à 6 cases. Joue sur les cadrages : plan large pour le lieu, plan moyen pour l'entrée, gros plan pour la réaction."},
-    ],
-    "Digital Art": [
-      {name:"Brush test — 5 textures différentes", desc:"Teste 5 brosses différentes sur un fond neutre. Pour chacune : trace des lignes droites, courbes, fais des ronds remplis et des aplats. Note ce que chaque brosse fait bien."},
-      {name:"Sous-peinture grisée + couleur par-dessus", desc:"D'abord une sous-peinture complète en niveaux de gris. Puis ajoute des calques de couleur par-dessus en mode 'Couleur' ou 'Incrustation'. C'est la technique des maîtres numérique."},
-    ],
-    "Pixel Art": [
-      {name:"Sprite 16x16 — personnage simple", desc:"Limite-toi à une grille 16x16 pixels. Crée un petit personnage reconnaissable avec 4 couleurs maximum. Chaque pixel compte."},
-      {name:"Tile de sol — seamless", desc:"Crée un tile de 32x32 qui se répète sans couture visible. Test : place-le 4 fois en 2x2. Les bords doivent se connecter parfaitement."},
-    ],
-    "Narration visuelle": [
-      {name:"Séquence muette en 4 cases", desc:"Raconte une micro-histoire sans aucun mot. Choisis un sujet simple : quelqu'un trouve quelque chose, rate quelque chose, rencontre quelqu'un. La clarté prime."},
-      {name:"Avant / Après — 2 cases", desc:"Case 1 : une situation. Case 2 : le résultat. L'action se passe entre les deux dans la tête du lecteur. L'ellipse est l'outil le plus puissant de la BD."},
-      {name:"4 cadrages — même moment", desc:"La même scène vue de face, de dos, de dessus et de dessous. Observe comment la même information prend une valeur émotionnelle complètement différente selon le point de vue."},
-      {name:"Page complète — scène complexe", desc:"Une seule grande illustration qui raconte une situation avec plusieurs personnages. Pas de cases — une seule image doit tout dire. Travaille les regards, les postures, la composition."},
-    ],
-    "Pixel Art": [
-      {name:"Sprite 16x16 — objet iconique", desc:"Choisis un objet simple (champignon, épée, potion) et dessine-le en 16x16 avec 4 couleurs max. Commence par la silhouette noire, puis remplis les zones de couleur."},
-      {name:"Personnage 32x32", desc:"Un petit personnage en 32x32 pixels. Silhouette claire, détails essentiels seulement. Teste-le sur fond blanc et fond noir."},
-      {name:"Tile seamless 16x16", desc:"Un tile de sol ou de mur qui se répète sans couture. Place-le en 2x2 pour tester les raccords. Les bords gauche/droite et haut/bas doivent se connecter."},
-      {name:"Animation 4 frames", desc:"Un objet ou personnage qui bouge en boucle en 4 frames. Mouvement subtil : respiration, lumière qui clignote, eau qui ondule. La boucle doit être imperceptible."},
-    ],
-    "Animation": [
-      {name:"Cycle de marche — 4 frames clés", desc:"Contact, passage, levée, abaissement. 4 poses suffisent pour un cycle de marche convaincant. Dessine les 4 poses sur des calques séparés."},
-      {name:"Bounce ball — 6 frames", desc:"La balle rebondissante est la base de l'animation. Elle s'écrase à l'impact (squash) et s'étire dans le mouvement (stretch). 6 frames minimum pour un cycle."},
-    ],
-  },
-
-  // --- Sujets par style ---
-  parStyle: {
-    "Dark Fairycore":  ["champignon bioluminescent","fée des ruines","cristal maudit","fleur carnivore","lune habitée","grimoire vivant","papillon de nuit","arbre creux habité","spore lumineuse","lierre sur des os","couronne d'épines fleuries","coffret à secrets"],
-    "Cottagecore":     ["tarte qui sort du four","jardin en désordre","bouquet de fleurs sauvages","chat sur un rebord de fenêtre","théière ébréchée","pluie sur une fenêtre","cueillette de baies","courtepointe patchwork","grenier poussiéreux","ruche dans un arbre creux"],
-    "Witchcore":       ["autel de pleine lune","grimoire avec des herbes séchées","chaudron qui bouillonne","cristaux et bougies","cercle de sel","chouette sur un crâne","fiole de brume","pendule qui se balance","chat noir dans l'ombre","bougie qui brûle seule"],
-    "Goblincore":      ["collection de pierres brillantes","champignons dans tous les sens","grenouille avec une couronne","trésors dans une grotte humide","bijoux trouvés dans la boue","escargot géant","tas de clés rouillées","petite créature qui fouille","baies inconnues","nid fait de fil et de chiffons"],
-    "Mushroomcore":    ["champignon géant habité","spores dans la lumière","réseau de mycelium lumineux","elfes sous un chapeau de champignon","champignon toxique élégant","cercle de champignons la nuit","récolte de champignons","champignon transformé en maison"],
-    "Forestpunk":      ["métal rouillé envahi de lierre","machine abandonnée dans les bois","tuyaux avec des fleurs dedans","robot couvert de mousse","engrenages et racines entrelacés","forêt qui reprend une ville","usine devenue jardin"],
-    "Fantasy médiéval":["chevalier fatigué","taverne un soir de pluie","marché de village","forgerons à l'œuvre","tour de sorcier","carte au trésor","armure abandonnée","bibliothèque d'un mage","créature gardienne d'un pont"],
-    "Art Nouveau":     ["femme aux cheveux-lianes","paon stylisé","iris et libellule","cadre organique fleuri","portrait encadré de glycine","araignée et toile dorée","méduse vue de dessous","pieuvre décorative"],
-    "Storybook":       ["petit personnage dans un monde grand","maison champignon","renard lecteur","lapin avec une montre","enfant et créature géante amicale","bouteille avec un monde dedans","île sur le dos d'une tortue","nuages habitables"],
-    "Dreamcore":       ["escalier qui ne mène nulle part","fenêtre sur un autre monde","chambre d'enfant vide","couloir infini","ciel qui ne ressemble pas au ciel","miroir qui ne reflète pas","salle pleine de portes","objet familier en surdimension"],
-    "Horreur douce":   ["poupée au sourire trop grand","fleur avec des dents","enfant aux yeux vides","maison mignonne mais dérangeante","animal avec trop d'yeux","gâteau avec quelque chose dedans","jouet cassé qui regarde"],
-    "Liminal spaces":  ["couloir d'hôtel vide la nuit","salle d'attente sans personne","piscine déserte","centre commercial fermé","parking souterrain","école pendant les vacances","jardin public sous la pluie","fast food à 3h du matin"],
-    "Ukiyo-e":         ["vague stylisée","mont Fuji dans la brume","carpe koï","cerisiers en fleur","guerrier en armure","femme à la fenêtre","pluie fine sur un chemin","aigle sur une falaise"],
-    "Steampunk":       ["dirigeable au-dessus des nuages","montre à gousset complexe","lunettes de protection","bras mécanique articulé","ville sous une cloche de verre","sous-marin victorien","automate de salon"],
-    "Solarpunk":       ["jardins sur les toits","éolienne dans un champ de fleurs","ville intégrée à la forêt","marché solaire","vêtements faits de plantes","bicyclette couverte de mousse","source d'eau communautaire"],
-    "Biopunk":         ["organe mécanique","créature hybride technologie-chair","prothèse organique","plante connectée","virus stylisé","mutation esthétique","laboratoire vivant"],
-    "Sketch urbain":   ["terrasse de café","metro bondé","coin de rue sous la pluie","façade d'immeuble","marché du dimanche","parc avec des passants","chantier en cours","vieille librairie"],
-    "Comics / BD":     ["scène d'action avec effets","planche muette","case de dialogue","double page d'ouverture","splash page","personnage en couverture","transition entre deux cases"],
-    "default":         ["sujet au choix","exploration libre","étude d'après nature","composition personnelle","expérimentation de style"],
-  },
-
-  // --- Contraintes créatives ---
-  contraintes: {
-    Facile: [
-      "en 15 minutes chrono — l'objectif c'est finir, pas perfectionner",
-      "sans lever ton crayon/stylet de la page — un seul trait continu",
-      "avec une palette de 3 couleurs maximum",
-      "en commençant par les formes géométriques simples uniquement",
-      "en format carré uniquement",
-      "en noir et blanc — aucune couleur",
-    ],
-    Moyen: [
-      "en 20 minutes — planifie 5 min, dessine 15 min",
-      "avec une palette de 2 couleurs complémentaires uniquement",
-      "sans aucune ligne de contour — uniquement des valeurs et des couleurs",
-      "en utilisant uniquement ta main non-dominante",
-      "en format très allongé (1:3 minimum)",
-      "en commençant par le fond et en allant vers le sujet",
-    ],
-    Difficile: [
-      "en 30 minutes — pas plus, pas moins",
-      "avec une seule couleur + le noir + le blanc uniquement",
-      "sans esquisse préalable — directement à l'encre ou à la couleur",
-      "en format miniature (pas plus grand que 5x5cm)",
-      "en travaillant du plus foncé au plus clair uniquement",
-      "avec un seul outil — pas de changement de brosse/outil autorisé",
-    ],
-  },
-
-  // --- Twists créatifs (combinaison d'éléments) ---
-  twists: [
-    "mais vu de l'intérieur",
-    "mais à une échelle incongrue (très grand ou très petit)",
-    "mais en train de se transformer en autre chose",
-    "mais dans 100 ans",
-    "mais vu par un insecte",
-    "mais sous l'eau",
-    "mais en automne avancé",
-    "mais la nuit, avec une seule source de lumière",
-    "mais cassé ou incomplet",
-    "mais en train d'être construit",
-    "mais recouvert de végétation",
-    "mais gélifié ou transparent",
-    "mais miniature dans une main",
-    "mais reflété dans l'eau",
-    "mais vu de très haut",
-  ],
-
-  // --- Conseils par compétence ---
-  conseils: {
-    "Anatomie": ["commence par la ligne d'action avant de construire le corps","dessine les formes géométriques de base avant d'affiner","les mains font 2/3 de la hauteur du visage","la tête tient dans la paume de la main","les yeux sont à mi-hauteur du crâne, pas au sommet"],
-    "Théorie des couleurs": ["teste ta palette en niveaux de gris avant d'appliquer les couleurs","les couleurs chaudes avancent, les froides reculent","une couleur isolée n'a pas de sens, c'est toujours une relation","sature moins que ce que tu crois nécessaire","le blanc et le noir modifient la teinte, pas seulement la valeur"],
-    "Composition": ["fais 3 miniatures en 5 minutes avant de commencer","le format dicte la composition — adapte-toi ou choisis-le consciemment","l'espace vide est un élément actif, pas un vide","crée de la tension en plaçant ton sujet légèrement hors-centre","varie la taille des éléments pour créer de la hiérarchie"],
-    "Lumière et Ombres": ["décide d'une seule source de lumière et reste cohérent","les ombres portées sont plus foncées que les ombres propres","la lumière réfléchie est légère, ne pas la surcharger","les transitions douces = lumière diffuse, dures = lumière directe","peins d'abord toutes les ombres, puis toutes les lumières"],
-    "Aquarelle/Peinture": ["mouille le papier pour des fondus, laisse-le sec pour des contours nets","travaille toujours du clair vers le foncé","laisse sécher complètement avant d'ajouter une couche","les erreurs en aquarelle sont souvent des heureux accidents","ne cherche pas à tout contrôler — laisse le médium travailler"],
-    "Character Design": ["la silhouette doit être lisible à 5cm de hauteur","chaque accessoire doit avoir une raison d'être","la tenue en dit autant sur le personnage que son visage","varie les formes : personnages ronds vs anguleux, grands vs petits","un personnage mémorable a une caractéristique distinctive forte"],
-    "Lineart / Encrage": ["varie l'épaisseur du trait pour créer de la profondeur","les lignes du premier plan sont plus épaisses","les traits confiants sont plus beaux que les traits hésitants","les erreurs d'encrage peuvent devenir des éléments de composition","laisse respirer — tout n'a pas besoin d'être encré"],
-    "Perspective": ["l'horizon = hauteur des yeux du spectateur","tous les points de fuite sont sur la ligne d'horizon","la perspective atmosphérique : plus c'est loin, plus c'est pâle et flou","commence par les grandes lignes de construction avant les détails","les cercles en perspective deviennent des ellipses"],
-    "Backgrounds": ["commence par les grandes masses de couleur, pas les détails","moins de détails au loin, plus près du spectateur","la végétation se dessine en masses, pas feuille par feuille","une bonne architecture a des proportions cohérentes","l'ambiance lumineuse prime sur les détails architecturaux"],
-    "Style personnel": ["copier consciemment des artistes que tu admires est une étape normale","ton style émerge de la répétition, pas d'un effort conscieux","les limitations créent le style — pas l'inverse","documente ton évolution avec des dates","essaie de finir plus de choses plutôt que de parfaire"],
-    "Narration visuelle": ["la silhouette des personnages doit être lisible même très petite","chaque case doit faire avancer l'histoire — coupe les cases inutiles","le blanc entre les cases est aussi important que les cases elles-mêmes","varie la taille des cases pour créer du rythme","un regard suffit à indiquer la direction que doit suivre l'œil du lecteur"],
-    "Pixel Art": ["commence toujours par la silhouette en noir","limite ta palette — 4 à 8 couleurs max pour débuter","un pixel mal placé se voit immédiatement — zoom souvent","la lisibilité prime sur les détails à petite résolution","teste ton sprite sur fond blanc et fond noir pour vérifier la lisibilité"],
-    "3D Modeling": ["commence toujours par une référence photo ou un croquis","en low poly la silhouette compte plus que les détails","un bon éclairage peut sauver une modélisation simple","teste ton modèle sous plusieurs angles avant de le considérer terminé","la topologie suit les lignes de mouvement de l'objet"],
-    "Illustration vectorielle": ["pense en formes géométriques pas en contours","la cohérence visuelle prime sur l'originalité de chaque élément","teste ta composition en noir et blanc avant d'ajouter les couleurs","moins de couleurs = plus d'impact","les espacements réguliers créent de la cohérence"],
-    "default": ["commence par les grandes formes avant les détails","travaille du général au particulier","fais des pauses et reviens avec un œil neuf","compare ton travail à ta référence toutes les 10 minutes","l'important c'est de finir, même imparfait"],
-  },
-};
-
-function generateLocal(keyword, theme, difficulty, skillName) {
-  var diff = difficulty || "Moyen";
-
-  // 1. Trouver l'exercice de base
-  var baseExercice = null;
-  var sujet = null;
-
-  if (skillName) {
-    // Mode compétence : exercice spécifique
-    var exercices = GEN_BANK.parCompetence[skillName];
-    if (exercices && exercices.length > 0) {
-      baseExercice = pick(exercices);
-    }
-  }
-
-  if (!baseExercice) {
-    // Mode style ou libre
-    var styleKey = theme || "default";
-    var sujetsStyle = GEN_BANK.parStyle[styleKey] || GEN_BANK.parStyle["default"];
-    sujet = keyword && keyword.trim() ? keyword.trim() : pick(sujetsStyle);
-  }
-
-  // 2. Twist créatif (30% de chance)
-  var twist = Math.random() < 0.3 ? pick(GEN_BANK.twists) : null;
-
-  // 3. Contrainte (40% de chance sur Moyen, 70% sur Difficile, 20% sur Facile)
-  var contrainteChance = diff === "Difficile" ? 0.7 : diff === "Moyen" ? 0.4 : 0.2;
-  var contrainte = Math.random() < contrainteChance ? pick(GEN_BANK.contraintes[diff] || GEN_BANK.contraintes["Moyen"]) : null;
-
-  // 4. Conseil adapté
-  var conseilPool = GEN_BANK.conseils[skillName] || GEN_BANK.conseils["default"];
-  var conseil = pick(conseilPool);
-
-  // 5. Construire le résultat
-  var name, description;
-
-  if (baseExercice) {
-    // Exercice de compétence
-    name = baseExercice.name;
-    if (twist) name += " — " + twist;
-    description = baseExercice.desc;
-    if (twist) description += " Twist : " + twist + ".";
-    if (theme) description += " Habille l'exercice dans un univers " + theme + ".";
-  } else {
-    // Sujet + style
-    var sujetFinal = sujet + (twist ? " " + twist : "");
-    name = "Dessine : " + sujetFinal.charAt(0).toUpperCase() + sujetFinal.slice(1);
-    if (name.length > 50) name = name.substring(0, 50) + "...";
-
-    var styleDesc = theme ? " dans un univers " + theme : "";
-    description = "Dessine " + sujetFinal + styleDesc + ". ";
-    if (diff === "Facile") description += "Garde-toi de l'espace pour expérimenter sans pression.";
-    else if (diff === "Moyen") description += "Soigne la composition et l'ambiance lumineuse.";
-    else description += "Vise une illustration soignée, avec une composition réfléchie et une palette cohérente.";
-  }
-
-  if (contrainte) description += " Contrainte : " + contrainte + ".";
-
-  return {
-    name: name,
-    description: description,
-    tips: conseil,
-    keyword: sujet || (baseExercice ? baseExercice.name.split("—")[0].trim() : ""),
-    isSurprise: !keyword || !keyword.trim(),
-    isLocal: true,
-    hasConstraint: !!contrainte,
-    hasTwist: !!twist,
+// --- GÉNÉRATEUR LOCAL ---
+// GEN_BANK et generateLocal sont définis dans generateur.js
+// Stub si non chargé
+if (typeof generateLocal === "undefined") {
+  var pick = function(arr) { return arr && arr.length ? arr[Math.floor(Math.random()*arr.length)] : null; };
+  var generateLocal = function(keyword, theme, difficulty) {
+    return { name:"Exercice libre", description: keyword ? "Dessine : "+keyword : "Dessin libre !", tips:"Commence par les grandes formes.", isSurprise:!keyword, isLocal:true, hasConstraint:false, hasTwist:false };
   };
 }
 
@@ -4243,174 +3949,65 @@ function GenerateurIA(props) {
   const themes = props.themes;
   const skills = props.skills;
 
-  // Détection PWA / app installée
-  var isPWA = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone === true;
-
-  const [keyword, setKeyword] = useState("");
+  const [keyword,       setKeyword]       = useState("");
   const [selectedTheme, setSelectedTheme] = useState("Dark Fairycore");
   const [selectedSkill, setSelectedSkill] = useState("");
-  const [difficulty, setDifficulty] = useState("Moyen");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [forceLocal, setForceLocal] = useState(false);
+  const [difficulty,    setDifficulty]    = useState("Moyen");
+  const [loading,       setLoading]       = useState(false);
+  const [result,        setResult]        = useState(null);
+  const [error,         setError]         = useState(null);
 
   var block = {background:THEME.surface,backdropFilter:"blur(12px)",border:"0.5px solid "+THEME.border,borderRadius:18,padding:"1.1rem 1.2rem"};
   var inp = {padding:"8px 12px",borderRadius:10,fontSize:13,border:"1px solid "+THEME.borderLight,background:THEME.inputBg,color:THEME.text};
 
   var SKILL_THEMES = ["Echauffement","Anatomie","Aquarelle/Peinture","Theorie couleur","Character Design","Lineart","Methode","Environnements","Personnages","3D Modeling","Narration visuelle","Illustration vectorielle","Animation","Pixel Art","Digital Art","Traditionnel Art"];
-  var styleThemes = themes.filter(function(t) { return !SKILL_THEMES.includes(t); });
-  if (styleThemes.length === 0) styleThemes = ["Dark Fairycore","Nature","Cartoon"];
+  var styleThemes = (themes||[]).filter(function(t) { return !SKILL_THEMES.includes(t); });
+  if (styleThemes.length === 0) styleThemes = ["Dark Fairycore","Nature","Révision"];
 
   function generate() {
-    setLoading(true);
-    setResult(null);
-    setError(null);
-
-    // Mode local : PWA OU choix manuel
-    if (isPWA || forceLocal) {
-      try {
-        var skillName = selectedSkill ? ((skills||[]).find(function(s){return s.id===Number(selectedSkill);})||{}).name : null;
-        var res = generateLocal(keyword, selectedTheme, difficulty, skillName);
-        setTimeout(function() {
-          setResult(res);
-          setLoading(false);
-        }, 400);
-      } catch(e) {
-        setError("Erreur de génération.");
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Mode Claude.ai : appel API avec promises
-    var isSurprise = !keyword.trim();
-    var surpriseType = ["une créature fantastique","un environnement mystérieux","une plante impossible","un personnage avec une émotion forte","un objet magique","une scène de nuit","une texture naturelle","un animal stylisé","un décor fairycore","une composition abstraite"][Math.floor(Math.random()*10)];
-    var skillObj = selectedSkill ? (skills||[]).find(function(s){return s.id===Number(selectedSkill);}) : null;
-    var skillContext = skillObj ? "Compétence ciblée : "+skillObj.name+" (l'exercice doit travailler spécifiquement cette compétence)" : "";
-    var themeContext = selectedTheme ? "Style/Univers visuel : "+selectedTheme : "Style/Univers : libre, choisis ce qui convient le mieux";
-    var isSurpriseCopy = isSurprise;
-
-    var prompt = isSurprise
-      ? "Tu es un assistant créatif pour artistes. Génère une idée d'exercice de dessin originale.\n\n"
-        + themeContext + "\n" + skillContext + "\nDifficulté : " + difficulty + "\nType de sujet : " + surpriseType + "\n\n"
-        + "Réponds UNIQUEMENT en JSON valide :\n{\"name\":\"Titre court\",\"description\":\"Description 2-3 phrases\",\"tips\":\"Un conseil\",\"keyword\":\"mot-clé\"}"
-      : "Tu es un assistant créatif pour artistes. Génère une idée d'exercice.\n\nMot-clé : \"" + keyword + "\"\n"
-        + themeContext + "\n" + skillContext + "\nDifficulté : " + difficulty + "\n\n"
-        + "Réponds UNIQUEMENT en JSON valide :\n{\"name\":\"Titre court\",\"description\":\"Description 2-3 phrases\",\"tips\":\"Un conseil\",\"keyword\":\"" + keyword + "\"}";
-
-    fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [{role:"user", content:prompt}]
-      })
-    }).then(function(response) {
-      return response.json();
-    }).then(function(data) {
-      var text = data.content.map(function(i) { return i.text || ""; }).join("");
-      var clean = text.replace(/```json|```/g, "").trim();
-      var parsed = JSON.parse(clean);
-      setResult(Object.assign({}, parsed, {isSurprise:isSurpriseCopy}));
-      setLoading(false);
-    }).catch(function() {
-      setError("Erreur lors de la génération. Réessaie !");
-      setLoading(false);
-    });
+    setLoading(true); setResult(null); setError(null);
+    try {
+      var skillName = selectedSkill ? ((skills||[]).find(function(s){return s.id===Number(selectedSkill);})||{}).name : null;
+      var res = generateLocal(keyword, selectedTheme, difficulty, skillName);
+      setTimeout(function() { setResult(res); setLoading(false); }, 300);
+    } catch(e) { setError("Erreur de génération."); setLoading(false); }
   }
 
   function addToTracker() {
     if (!result) return;
     var xpAmount = difficulty==="Facile"?10:difficulty==="Moyen"?15:20;
     var rewardSkillId = selectedSkill ? Number(selectedSkill) : (skills&&skills[0]?skills[0].id:3);
-    var newTask = {
-      id: Date.now(),
-      name: result.name,
-      theme: selectedTheme||"Methode",
-      rewards: [{skillId:rewardSkillId, xp:xpAmount, optional:false}]
-    };
+    var newTask = { id:Date.now(), name:result.name, theme:selectedTheme||"Methode", rewards:[{skillId:rewardSkillId,xp:xpAmount,optional:false}] };
     if (result.description) DESCS[newTask.id] = result.description + (result.tips ? " Conseil : "+result.tips : "");
-    onAddTask(newTask);
-    setResult(null);
-    setKeyword("");
+    onAddTask(newTask); setResult(null); setKeyword("");
   }
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {/* Bannière mode PWA */}
-      {isPWA && (
-        <div style={{...block,background:THEME.accent+"10",border:"1px solid "+THEME.accent+"33",display:"flex",alignItems:"flex-start",gap:10}}>
-          <span style={{fontSize:20,flexShrink:0}}>🎲</span>
-          <div>
-            <div style={{fontSize:13,fontWeight:600,color:THEME.accent,marginBottom:3}}>Générateur local</div>
-            <div style={{fontSize:11,color:THEME.textSub,lineHeight:1.5}}>
-              Dans l'app tu utilises le générateur de combinaisons. Pour le générateur IA complet, ouvre l'app dans{" "}
-              <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{fontWeight:600,color:THEME.accent,textDecoration:"underline",textUnderlineOffset:2}}>Claude.ai</a>.
-            </div>
-          </div>
-        </div>
-      )}
-
       <div style={block}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:2,gap:8}}>
-          <div style={{fontSize:13,fontWeight:600,color:THEME.text}}>
-            {(isPWA||forceLocal)?"🎲 Générateur de combinaisons":"✨ Générateur d'idées IA"}
-          </div>
-          {/* Toggle mode — seulement si pas en PWA (en PWA c'est forcément local) */}
-          {!isPWA && (
-            <div style={{display:"flex",gap:0,borderRadius:20,border:"1px solid "+THEME.border,overflow:"hidden",flexShrink:0}}>
-              <button onClick={function(){setForceLocal(false);}} style={{padding:"4px 10px",fontSize:10,cursor:"pointer",border:"none",background:!forceLocal?THEME.accent:"transparent",color:!forceLocal?"#fff":THEME.textMuted,fontWeight:!forceLocal?600:400}}>
-                ✨ IA
-              </button>
-              <button onClick={function(){setForceLocal(true);}} style={{padding:"4px 10px",fontSize:10,cursor:"pointer",border:"none",background:forceLocal?THEME.accent:"transparent",color:forceLocal?"#fff":THEME.textMuted,fontWeight:forceLocal?600:400}}>
-                🎲 Local
-              </button>
+        <div style={{fontSize:13,fontWeight:600,color:THEME.text,marginBottom:2}}>🎲 Générateur d'idées</div>
+        <div style={{fontSize:11,color:THEME.textMuted,marginBottom:12}}>
+          {selectedTheme === "Révision" ? "Mode révision — exercices de bases selon ta difficulté." : "Tape un mot-clé ou laisse vide pour une idée surprise !"}
+        </div>
+        {selectedTheme !== "Révision" && (
+          <div style={{display:"flex",gap:8,marginBottom:12}}>
+            <div style={{flex:1,position:"relative"}}>
+              <input value={keyword} onChange={function(e){setKeyword(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")generate();}} placeholder="Mot-clé... ou laisse vide pour une surprise 🎲" style={{...inp,width:"100%",boxSizing:"border-box",paddingRight:keyword?"32px":"12px"}}/>
+              {keyword && <button onClick={function(){setKeyword("");}} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",border:"none",background:"none",cursor:"pointer",fontSize:13,color:THEME.textMuted}}>✕</button>}
             </div>
-          )}
-        </div>
-        <div style={{fontSize:11,color:THEME.textMuted,marginBottom:12}}>{(isPWA||forceLocal)?"Pioche une idée structurée depuis la banque d'exercices !":"Tape un mot-clé ou laisse vide pour une idée surprise !"}</div>
-
-        <div style={{display:"flex",gap:8,marginBottom:12}}>
-          <div style={{flex:1,position:"relative"}}>
-            <input
-              value={keyword}
-              onChange={function(e) { setKeyword(e.target.value); }}
-              onKeyDown={function(e) { if(e.key==="Enter") generate(); }}
-              placeholder={isPWA?"Mot-clé optionnel... (ex: champignon)":"Mot-clé... ou laisse vide pour une surprise 🎲"}
-              style={{...inp, width:"100%", boxSizing:"border-box", paddingRight: keyword?"32px":"12px"}}
-            />
-            {keyword && <button onClick={function(){setKeyword("");}} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",border:"none",background:"none",cursor:"pointer",fontSize:13,color:THEME.textMuted}}>✕</button>}
           </div>
-          <button onClick={generate} disabled={loading} style={{padding:"8px 16px",borderRadius:10,fontSize:13,cursor:loading?"default":"pointer",border:"1px solid "+THEME.accent+"44",background:loading?THEME.surfaceLight:THEME.accent,color:loading?THEME.textMuted:"#fff",fontWeight:600,whiteSpace:"nowrap"}}>
-            {loading ? "..." : (isPWA||forceLocal) ? "🎲 Piocher" : (keyword.trim() ? "✨ Générer" : "🎲 Surprise")}
-          </button>
-        </div>
-
+        )}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
           <div>
             <div style={{fontSize:11,color:THEME.textMuted,marginBottom:3}}>🎯 Compétence ciblée</div>
-            <CustomSelect
-              value={selectedSkill}
-              onChange={setSelectedSkill}
-              options={[{value:"",label:"Aucune (libre)"}].concat((skills||[]).map(function(sk){return {value:String(sk.id),label:(sk.emoji||"")+sk.name};}))}
-              placeholder="Aucune (libre)"
-            />
+            <CustomSelect value={selectedSkill} onChange={setSelectedSkill} options={[{value:"",label:"Aucune (libre)"}].concat((skills||[]).map(function(sk){return {value:String(sk.id),label:(sk.emoji||"")+sk.name};}))} placeholder="Aucune (libre)"/>
           </div>
           <div>
             <div style={{fontSize:11,color:THEME.textMuted,marginBottom:3}}>🌙 Style / Univers</div>
-            <CustomSelect
-              value={selectedTheme}
-              onChange={setSelectedTheme}
-              options={[{value:"",label:"Aucun (libre)"}].concat(styleThemes.map(function(t){return {value:t,label:t};}))}
-              placeholder="Aucun (libre)"
-            />
+            <CustomSelect value={selectedTheme} onChange={function(v){setSelectedTheme(v);if(v==="Révision")setKeyword("");}} options={[{value:"",label:"Aucun (libre)"}].concat(styleThemes.map(function(t){return {value:t,label:t};}))} placeholder="Aucun (libre)"/>
           </div>
         </div>
-
-        <div>
+        <div style={{marginBottom:12}}>
           <div style={{fontSize:11,color:THEME.textMuted,marginBottom:5}}>Difficulté</div>
           <div style={{display:"flex",gap:4}}>
             {["Facile","Moyen","Difficile"].map(function(d) {
@@ -4419,35 +4016,21 @@ function GenerateurIA(props) {
             })}
           </div>
         </div>
+        <button onClick={generate} disabled={loading} style={{width:"100%",padding:"10px",borderRadius:12,fontSize:13,cursor:loading?"default":"pointer",border:"1px solid "+THEME.accent+"44",background:loading?THEME.surfaceLight:THEME.accent,color:loading?THEME.textMuted:"#fff",fontWeight:600}}>
+          {loading ? "..." : keyword.trim() ? "✨ Générer" : "🎲 Surprise"}
+        </button>
       </div>
-
-      {error && (
-        <div style={{...block,background:THEME.danger+"08",border:"1px solid "+THEME.danger+"33"}}>
-          <div style={{fontSize:13,color:THEME.danger}}>{error}</div>
-        </div>
-      )}
-
-      {loading && (
-        <div style={{...block,textAlign:"center",padding:"2rem"}}>
-          <div style={{fontSize:24,marginBottom:8}}>{(isPWA||forceLocal)?"🎲":"✨"}</div>
-          <div style={{fontSize:13,color:THEME.accent,fontWeight:500}}>{(isPWA||forceLocal)?"Pioche une idée...":"Claude crée ton exercice..."}</div>
-        </div>
-      )}
-
+      {error && <div style={{...block,background:THEME.danger+"08",border:"1px solid "+THEME.danger+"33"}}><div style={{fontSize:13,color:THEME.danger}}>{error}</div></div>}
+      {loading && <div style={{...block,textAlign:"center",padding:"2rem"}}><div style={{fontSize:24,marginBottom:8}}>🎲</div><div style={{fontSize:13,color:THEME.accent,fontWeight:500}}>Génération en cours...</div></div>}
       {result && (
         <div style={{...block,border:"1px solid "+THEME.accent+"33",background:THEME.accent+"05"}}>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
-            {result.isSurprise && <span style={{fontSize:10,color:THEME.accentGold,background:THEME.accentGold+"15",borderRadius:20,padding:"2px 10px",fontWeight:600}}>🎲 {isPWA?"Aléatoire":"Surprise"}</span>}
-            {result.isLocal && <span style={{fontSize:10,color:THEME.textMuted,background:THEME.surfaceLight,borderRadius:20,padding:"2px 10px"}}>📱 Local</span>}
+            {result.isSurprise && <span style={{fontSize:10,color:THEME.accentGold,background:THEME.accentGold+"15",borderRadius:20,padding:"2px 10px",fontWeight:600}}>🎲 Surprise</span>}
             {result.hasTwist && <span style={{fontSize:10,color:THEME.accentPink,background:THEME.accentPink+"15",borderRadius:20,padding:"2px 10px",fontWeight:500}}>🌀 Twist</span>}
             {result.hasConstraint && <span style={{fontSize:10,color:THEME.danger,background:THEME.danger+"15",borderRadius:20,padding:"2px 10px",fontWeight:500}}>⏱ Contrainte</span>}
-            {selectedSkill && (function(){
-              var sk=(skills||[]).find(function(s){return s.id===Number(selectedSkill);});
-              return sk?<span style={{fontSize:10,color:sk.color,background:sk.color+"15",borderRadius:20,padding:"2px 10px",fontWeight:500}}>🎯 {sk.name}</span>:null;
-            })()}
+            {selectedSkill && (function(){var sk=(skills||[]).find(function(s){return s.id===Number(selectedSkill);}); return sk?<span style={{fontSize:10,color:sk.color,background:sk.color+"15",borderRadius:20,padding:"2px 10px",fontWeight:500}}>🎯 {sk.name}</span>:null;})()}
             {selectedTheme && <span style={{fontSize:10,color:THEME.accent,background:THEME.accent+"15",borderRadius:20,padding:"2px 10px",fontWeight:500}}>🌙 {selectedTheme}</span>}
             <span style={{fontSize:10,color:(DIFF_COLOR[difficulty]||THEME.textMuted),background:(DIFF_COLOR[difficulty]||THEME.accent)+"15",borderRadius:20,padding:"2px 8px",fontWeight:500}}>{difficulty}</span>
-            {result.keyword && <span style={{fontSize:10,color:THEME.textMuted,background:THEME.surfaceLight,borderRadius:20,padding:"2px 8px"}}>#{result.keyword}</span>}
           </div>
           <div style={{fontSize:15,fontWeight:600,color:THEME.text,marginBottom:8}}>🎨 {result.name}</div>
           <div style={{fontSize:13,color:THEME.textSub,lineHeight:1.6,marginBottom:result.tips?8:14}}>{result.description}</div>
