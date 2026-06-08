@@ -8281,6 +8281,35 @@ project, hobbies, onClose, onUpdate, onDelete }) {
           )}
         </div>
 
+        {/* Collaborateur */}
+        {(function() {
+          var [editingCollab, setEditingCollab] = useState(false);
+          var [collabVal, setCollabVal] = useState(project.collaborator || "");
+          function saveCollab() {
+            onUpdate(Object.assign({}, project, { collaborator: collabVal.trim() || null }));
+            setEditingCollab(false);
+          }
+          return (
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:11, color:T.textMuted, flexShrink:0 }}>🤝 Fait avec :</span>
+              {editingCollab ? (
+                <React.Fragment>
+                  <input value={collabVal} onChange={function(e){setCollabVal(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")saveCollab();}}
+                    autoFocus placeholder="Nom du collaborateur..."
+                    style={{ flex:1, padding:"4px 8px", borderRadius:8, fontSize:12, border:"1px solid "+T.border, background:T.inputBg, color:T.text, outline:"none" }}/>
+                  <button onClick={saveCollab} style={{ fontSize:11, padding:"4px 10px", borderRadius:8, border:"none", background:T.accentGreen, color:"#fff", cursor:"pointer", fontWeight:600 }}>✓</button>
+                  <button onClick={function(){setEditingCollab(false);}} style={{ fontSize:11, padding:"4px 8px", borderRadius:8, border:"1px solid "+T.border, background:"transparent", color:T.textMuted, cursor:"pointer" }}>✕</button>
+                </React.Fragment>
+              ) : (
+                <button onClick={function(){setCollabVal(project.collaborator||"");setEditingCollab(true);}}
+                  style={{ fontSize:12, color:project.collaborator?T.text:T.textMuted, background:"none", border:"none", cursor:"pointer", padding:0, fontWeight:project.collaborator?500:400 }}>
+                  {project.collaborator || "Seule — ajouter quelqu'un ?"}
+                </button>
+              )}
+            </div>
+          );
+        })()}
+
         {/* XP bar */}
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -8447,6 +8476,55 @@ project, hobbies, onClose, onUpdate, onDelete }) {
           )}
         </div>
 
+        {/* Matériaux */}
+        {((project.materials||[]).length > 0 || true) && (function() {
+          var mats = project.materials || [];
+          var checkedCount = mats.filter(function(m) { return m.checked; }).length;
+          var [newMat, setNewMat] = useState("");
+          function toggleMat(id) {
+            onUpdate(Object.assign({}, project, {
+              materials: mats.map(function(m) { return m.id === id ? Object.assign({}, m, { checked: !m.checked }) : m; })
+            }));
+          }
+          function addMat() {
+            var t = newMat.trim();
+            if (!t) return;
+            onUpdate(Object.assign({}, project, { materials: mats.concat([{ id: Date.now(), label: t, checked: false }]) }));
+            setNewMat("");
+          }
+          function removeMat(id) {
+            onUpdate(Object.assign({}, project, { materials: mats.filter(function(m) { return m.id !== id; }) }));
+          }
+          return (
+            <div>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                <div style={{ fontSize:13, fontWeight:600, color:T.textSub }}>🧵 Matériaux</div>
+                {mats.length > 0 && <span style={{ fontSize:11, color:T.textMuted }}>{checkedCount}/{mats.length} préparés</span>}
+              </div>
+              {mats.length > 0 && (
+                <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:10 }}>
+                  {mats.map(function(m) {
+                    return (
+                      <div key={m.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 10px", borderRadius:10, background:m.checked?T.accentGreen+"10":T.surfaceLight, border:"1px solid "+(m.checked?T.accentGreen+"33":T.border), transition:"all 0.15s" }}>
+                        <input type="checkbox" checked={!!m.checked} onChange={function(){toggleMat(m.id);}} style={{ accentColor:T.accentGreen, flexShrink:0, width:16, height:16 }}/>
+                        <span style={{ flex:1, fontSize:12, color:m.checked?T.textMuted:T.text, textDecoration:m.checked?"line-through":"none" }}>{m.label}</span>
+                        <button onClick={function(){removeMat(m.id);}} style={{ background:"none", border:"none", cursor:"pointer", color:T.textMuted, fontSize:12, padding:0, lineHeight:1, opacity:0.5 }}>✕</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div style={{ display:"flex", gap:6 }}>
+                <input value={newMat} onChange={function(e){setNewMat(e.target.value);}}
+                  onKeyDown={function(e){if(e.key==="Enter"){e.preventDefault();addMat();}}}
+                  placeholder="Ajouter un matériau..."
+                  style={{ flex:1, padding:"8px 10px", borderRadius:10, fontSize:12, border:"1px solid "+T.border, background:T.inputBg, color:T.text, outline:"none" }}/>
+                <button onClick={addMat} style={{ padding:"8px 12px", borderRadius:10, border:"1px solid "+T.accent+"44", background:T.accent+"12", color:T.accent, cursor:"pointer", fontSize:13, fontWeight:600 }}>+</button>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Notes */}
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: T.textSub, marginBottom: 10 }}>Journal de progression</div>
@@ -8588,8 +8666,17 @@ hobbies, onClose, onAdd }) {
   const [firstNote, setFirstNote] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState([]);
+  const [materialInput, setMaterialInput] = useState("");
+  const [materials, setMaterials] = useState([]);
+  const [collaborator, setCollaborator] = useState("");
 
-  function addTag() {
+  function addMaterial() {
+    var m = materialInput.trim();
+    if (!m) return;
+    setMaterials(function(p) { return p.concat([{ id: Date.now(), label: m, checked: false }]); });
+    setMaterialInput("");
+  }
+  function removeMaterial(id) { setMaterials(function(p) { return p.filter(function(m) { return m.id !== id; }); }); }  function addTag() {
     var t = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
     if (!t || tags.includes(t) || tags.length >= 8) return;
     setTags(function(p) { return p.concat([t]); });
@@ -8618,7 +8705,8 @@ hobbies, onClose, onAdd }) {
       estimatedHours: estimatedHours ? Number(estimatedHours) : 0,
       materialCost: materialCost || null,
       startDate: status === "inprogress" ? (startDate || todayStr()) : (startDate || null),
-      deadline: deadline || null, xp: calcProjectXPFull(status, difficulty, estimatedHours, materialCost), notes, tags: tags });
+      deadline: deadline || null, xp: calcProjectXPFull(status, difficulty, estimatedHours, materialCost),
+      notes, tags: tags, materials: materials, collaborator: collaborator.trim() || null });
     onClose();
   }
 
@@ -8680,6 +8768,28 @@ hobbies, onClose, onAdd }) {
               onChange={function(e) { setTagInput(e.target.value); }}
               onKeyDown={function(e) { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}/>
             <button onClick={addTag} style={{ padding: "9px 14px", borderRadius: 10, border: "1px solid " + T.accentViolet + "55", background: T.accentViolet + "15", color: T.accentViolet, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>+</button>
+          </div>
+        </div>
+        <input style={inp} placeholder="🤝 Fait avec... (optionnel)" value={collaborator} onChange={function(e){setCollaborator(e.target.value);}}/>
+        <div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>🧵 Matériaux nécessaires (optionnel)</div>
+          {materials.length > 0 && (
+            <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:6 }}>
+              {materials.map(function(m) {
+                return (
+                  <div key={m.id} style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:8, background:T.surfaceLight, border:"1px solid "+T.border }}>
+                    <span style={{ fontSize:12, color:T.text, flex:1 }}>{m.label}</span>
+                    <button onClick={function(){removeMaterial(m.id);}} style={{ background:"none", border:"none", cursor:"pointer", color:T.textMuted, fontSize:12, padding:0, lineHeight:1 }}>✕</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div style={{ display:"flex", gap:6 }}>
+            <input style={Object.assign({}, inp, { flex:1 })} placeholder="Laine, aiguilles, patron..." value={materialInput}
+              onChange={function(e) { setMaterialInput(e.target.value); }}
+              onKeyDown={function(e) { if (e.key === "Enter") { e.preventDefault(); addMaterial(); } }}/>
+            <button onClick={addMaterial} style={{ padding:"9px 14px", borderRadius:10, border:"1px solid "+T.accent+"55", background:T.accent+"15", color:T.accent, cursor:"pointer", fontSize:13, fontWeight:600 }}>+</button>
           </div>
         </div>
         <textarea style={Object.assign({}, inp, { resize: "none" })} rows={3}
@@ -8837,6 +8947,7 @@ project, hobbies, onClick, onToggleHighlight }) {
             </span>
           )}
           {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount} note{noteCount > 1 ? "s" : ""}</span>}
+          {project.collaborator && <span style={{ fontSize: 10, color: T.textMuted }}>🤝 {project.collaborator}</span>}
           {project.photo && <span style={{ fontSize: 10, color: T.accentGreen }}>📷</span>}
           {(function() {
             var mins = (project.timeSpent||[]).reduce(function(s,t){ return s+(t.minutes||0); }, 0);
@@ -8862,7 +8973,10 @@ project, hobbies, onClick, onToggleHighlight }) {
 // --- GALLERY TAB ---
 function DIY_GalleryTab({
 data, onOpenProject }) {
+  const [lightbox, setLightbox] = useState(null); // {src, name, photos, idx}
+
   var done = data.projects.filter(function(p) { return p.status === "done"; });
+
   if (done.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "40px 20px", color: T.textMuted }}>
@@ -8872,46 +8986,104 @@ data, onOpenProject }) {
       </div>
     );
   }
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-      {done.map(function(p) {
-        var hobby = data.hobbies.find(function(h) { return h.id === p.hobby; }) || { emoji: "✦", label: p.hobby };
-        var noteCount = (p.notes || []).length;
-        return (
-          <div key={p.id} onClick={function() { onOpenProject(p); }} style={{
-            background: T.surfaceCard, border: "1px solid " + T.cardDoneBorder,
-            borderRadius: 14, overflow: "hidden", cursor: "pointer", position: "relative",
-            display: "flex", flexDirection: "column", transition: "transform 0.15s",
-          }}
-            onMouseEnter={function(e) { e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={function(e) { e.currentTarget.style.transform = "translateY(0)"; }}
-          >
-            {/* Indicateur tap */}
-            <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.35)", borderRadius: 20, padding: "2px 8px", fontSize: 10, color: "#fff", zIndex: 1, pointerEvents: "none" }}>
-              voir →
+    <React.Fragment>
+      {/* Lightbox plein écran */}
+      {lightbox && (
+        <div onClick={function() { setLightbox(null); }}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+          {/* Header */}
+          <div onClick={function(e){e.stopPropagation();}} style={{ position:"absolute", top:0, left:0, right:0, padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between", background:"linear-gradient(to bottom,rgba(0,0,0,0.7),transparent)" }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:"#fff" }}>{lightbox.name}</div>
+              {lightbox.photos.length > 1 && <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)" }}>{lightbox.idx+1} / {lightbox.photos.length}</div>}
             </div>
-            {p.photo ? (
-              <div style={{ width: "100%", aspectRatio: "1", overflow: "hidden" }}>
-                <img src={p.photo} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}/>
-              </div>
-            ) : (
-              <div style={{ width: "100%", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", background: T.surfaceLight, fontSize: 36 }}>
-                {hobby.emoji}
-              </div>
-            )}
-            <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>{hobby.emoji} {hobby.label}</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 2 }}>
-                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: T.xpTrack, color: T.accent, fontWeight: 600 }}>✦ {p.xp} XP</span>
-                {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount}</span>}
-                {p.photo && <span style={{ fontSize: 10, color: T.accentGreen }}>📷</span>}
-              </div>
-            </div>
+            <button onClick={function(){setLightbox(null);}} style={{ border:"none", background:"rgba(255,255,255,0.15)", borderRadius:"50%", width:36, height:36, cursor:"pointer", color:"#fff", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
           </div>
-        );
-      })}
-    </div>
+
+          {/* Image */}
+          <img src={lightbox.photos[lightbox.idx]} alt={lightbox.name}
+            onClick={function(e){e.stopPropagation();}}
+            style={{ maxWidth:"100%", maxHeight:"80vh", objectFit:"contain", borderRadius:8 }}/>
+
+          {/* Navigation si plusieurs photos */}
+          {lightbox.photos.length > 1 && (
+            <div onClick={function(e){e.stopPropagation();}} style={{ display:"flex", gap:12, marginTop:16 }}>
+              <button onClick={function() { setLightbox(function(l) { return Object.assign({},l,{idx:(l.idx-1+l.photos.length)%l.photos.length}); }); }}
+                style={{ border:"1px solid rgba(255,255,255,0.3)", background:"rgba(255,255,255,0.1)", borderRadius:10, padding:"8px 16px", color:"#fff", cursor:"pointer", fontSize:16 }}>‹</button>
+              <button onClick={function() { setLightbox(function(l) { return Object.assign({},l,{idx:(l.idx+1)%l.photos.length}); }); }}
+                style={{ border:"1px solid rgba(255,255,255,0.3)", background:"rgba(255,255,255,0.1)", borderRadius:10, padding:"8px 16px", color:"#fff", cursor:"pointer", fontSize:16 }}>›</button>
+            </div>
+          )}
+
+          {/* Miniatures */}
+          {lightbox.photos.length > 1 && (
+            <div onClick={function(e){e.stopPropagation();}} style={{ display:"flex", gap:6, marginTop:12, flexWrap:"wrap", justifyContent:"center", padding:"0 16px" }}>
+              {lightbox.photos.map(function(src, i) {
+                return (
+                  <div key={i} onClick={function(){setLightbox(function(l){return Object.assign({},l,{idx:i});});}}
+                    style={{ width:48, height:48, borderRadius:8, overflow:"hidden", border:"2px solid "+(lightbox.idx===i?"#fff":"transparent"), cursor:"pointer", flexShrink:0 }}>
+                    <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Grille projets */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {done.map(function(p) {
+          var hobby = data.hobbies.find(function(h) { return h.id === p.hobby; }) || { emoji: "✦", label: p.hobby };
+          var noteCount = (p.notes || []).length;
+          // Toutes les photos du projet (photo principale + photos de progression)
+          var allPhotos = [];
+          if (p.photo) allPhotos.push(p.photo);
+          (p.progressPhotos||[]).forEach(function(pp) { if (pp.url) allPhotos.push(pp.url); });
+
+          return (
+            <div key={p.id} style={{
+              background: T.surfaceCard, border: "1px solid " + T.cardDoneBorder,
+              borderRadius: 14, overflow: "hidden", cursor: "pointer", position: "relative",
+              display: "flex", flexDirection: "column", transition: "transform 0.15s",
+            }}
+              onMouseEnter={function(e) { e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={function(e) { e.currentTarget.style.transform = "translateY(0)"; }}
+            >
+              {/* Photo cliquable → lightbox */}
+              {p.photo ? (
+                <div style={{ width: "100%", aspectRatio: "1", overflow: "hidden", position:"relative" }}
+                  onClick={function() { setLightbox({src:p.photo, name:p.name, photos:allPhotos, idx:0}); }}>
+                  <img src={p.photo} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}/>
+                  {allPhotos.length > 1 && (
+                    <div style={{ position:"absolute", bottom:6, right:6, background:"rgba(0,0,0,0.55)", borderRadius:20, padding:"2px 8px", fontSize:10, color:"#fff" }}>
+                      📷 {allPhotos.length}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div onClick={function() { onOpenProject(p); }} style={{ width: "100%", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", background: T.surfaceLight, fontSize: 36 }}>
+                  {hobby.emoji}
+                </div>
+              )}
+
+              {/* Infos — clic → fiche projet */}
+              <div onClick={function() { onOpenProject(p); }} style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{p.name}</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{hobby.emoji} {hobby.label}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 2 }}>
+                  <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: T.xpTrack, color: T.accent, fontWeight: 600 }}>✦ {p.xp} XP</span>
+                  {noteCount > 0 && <span style={{ fontSize: 10, color: T.textMuted }}>📝 {noteCount}</span>}
+                  {allPhotos.length > 0 && <span style={{ fontSize: 10, color: T.accentGreen }}>📷 {allPhotos.length}</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </React.Fragment>
   );
 }
 
@@ -8927,6 +9099,56 @@ data, themeMode }) {
   var inprog = projects.filter(function(p) { return p.status === "inprogress"; }).length;
   var wish = projects.filter(function(p) { return p.status === "wishlist"; }).length;
   const [subtab, setSubtab] = useState("radar");
+  const [selectedMonth, setSelectedMonth] = useState(function() {
+    var n = new Date(); return { year: n.getFullYear(), month: n.getMonth()+1 };
+  });
+
+  var MONTH_NAMES = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  var pad = function(n) { return n < 10 ? "0"+n : ""+n; };
+
+  function computeDIYMonthSummary(year, month) {
+    var monthStr = pad(month)+"/"+year;
+    function inMonth(dateStr) {
+      if (!dateStr) return false;
+      // dateStr peut être "YYYY-MM-DD" ou "DD/MM/YYYY"
+      if (dateStr.includes("-")) {
+        var parts = dateStr.split("-");
+        return parts[1] === pad(month) && parts[0] === ""+year;
+      }
+      return dateStr.slice(3) === monthStr;
+    }
+
+    var doneThisMonth = projects.filter(function(p) {
+      return p.status === "done" && inMonth(p.completedDate || p.completedAt);
+    });
+    var startedThisMonth = projects.filter(function(p) {
+      return inMonth(p.startDate);
+    });
+
+    // Temps total ce mois (sessions timer des projets)
+    var totalMins = projects.reduce(function(sum, p) {
+      var sessions = (p.timeSpent||[]).filter(function(s) { return inMonth(s.date); });
+      return sum + sessions.reduce(function(s2,t) { return s2+(t.minutes||0); }, 0);
+    }, 0);
+    // Ajouter realHours des projets terminés ce mois
+    doneThisMonth.forEach(function(p) {
+      if (p.realHours) totalMins += Math.round(p.realHours * 60);
+    });
+
+    var xpThisMonth = doneThisMonth.reduce(function(s,p) { return s+(p.xp||0); }, 0);
+
+    var hobbiesThisMonth = {};
+    doneThisMonth.forEach(function(p) {
+      hobbiesThisMonth[p.hobby] = (hobbiesThisMonth[p.hobby]||0) + 1;
+    });
+
+    return {
+      doneThisMonth, startedThisMonth,
+      totalMins, xpThisMonth,
+      hobbiesThisMonth,
+      hasData: doneThisMonth.length > 0 || startedThisMonth.length > 0 || totalMins > 0,
+    };
+  }
 
   var statCard = function(label, value, sub, color) {
     return (
@@ -8969,10 +9191,10 @@ data, themeMode }) {
         {statCard("Total", projects.length, "projets créés", T.textSub)}
       </div>
 
-      {/* Sous-onglets radar / progression / badges */}
-      <div style={{ display: "flex", gap: 6 }}>
-        {["radar","progression","badges"].map(function(t) {
-          var labels = { radar: "Radar", progression: "Hobbies", badges: "Badges" };
+      {/* Sous-onglets */}
+      <div style={{ display: "flex", gap: 6, flexWrap:"wrap" }}>
+        {["radar","progression","badges","mois"].map(function(t) {
+          var labels = { radar: "Radar", progression: "Hobbies", badges: "Badges", mois: "📅 Mois" };
           var active = subtab === t;
           return (
             <button key={t} onClick={function() { setSubtab(t); }} style={{
@@ -8994,14 +9216,66 @@ data, themeMode }) {
       {subtab === "progression" && topHobbies.length > 0 && (
         <div style={{ background: T.surfaceCard, border: "1px solid " + T.border, borderRadius: 14, padding: 14 }}>
           {topHobbies.map(function(h) {
-            var pct = h.total > 0 ? Math.round(h.done / h.total * 100) : 0;
+            // Temps total passé sur ce hobby (timeSpent sessions + realHours des projets terminés)
+            var totalMins = projects.filter(function(p) { return p.hobby === h.id; }).reduce(function(sum, p) {
+              var sessionMins = (p.timeSpent||[]).reduce(function(s,t){ return s+(t.minutes||0); }, 0);
+              var realMins = (p.status === "done" && p.realHours) ? Math.round(p.realHours * 60) : 0;
+              // Prendre le max entre sessions timer et realHours (évite double comptage)
+              return sum + Math.max(sessionMins, realMins);
+            }, 0);
+            var totalHours = Math.floor(totalMins / 60);
+            var totalMinsRem = totalMins % 60;
+
+            // XP dans le niveau actuel
+            var hobbyLv = Math.floor(h.xp / DIY_XP_PER_LEVEL) + 1;
+            var hobbyXpIn = h.xp % DIY_XP_PER_LEVEL;
+
+            var inprogCount = projects.filter(function(p) { return p.hobby === h.id && p.status === "inprogress"; }).length;
+            var wishCount   = projects.filter(function(p) { return p.hobby === h.id && p.status === "wishlist"; }).length;
+
             return (
-              <div key={h.id} style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, color: T.text }}>{h.emoji} {h.label}</span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.done}/{h.total} · {h.xp} XP</span>
+              <div key={h.id} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "0.5px solid " + T.border }}>
+                {/* Header hobby */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: 8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap: 6 }}>
+                    <span style={{ fontSize: 18 }}>{h.emoji}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{h.label}</span>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.accent }}>Niv. {hobbyLv}</span>
+                    <span style={{ fontSize: 11, color: T.textMuted }}>{h.xp} XP</span>
+                  </div>
                 </div>
-                <DIY_XpBar current={h.done} total={h.total} color={T.accentGreen} height={5}/>
+
+                {/* Barre XP niveau */}
+                <div style={{ height: 6, background: T.xpTrack, borderRadius: 99, marginBottom: 8, overflow:"hidden" }}>
+                  <div style={{ height:"100%", width:(hobbyXpIn/DIY_XP_PER_LEVEL*100)+"%", background:T.accent, borderRadius:99, transition:"width 0.3s" }}/>
+                </div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>{hobbyXpIn}/{DIY_XP_PER_LEVEL} XP vers le niveau {hobbyLv+1}</div>
+
+                {/* Stats projets + temps */}
+                <div style={{ display:"flex", gap: 8, flexWrap:"wrap" }}>
+                  {h.done > 0 && (
+                    <span style={{ fontSize: 10, padding:"2px 8px", borderRadius:20, background:T.accentGreen+"15", color:T.accentGreen, border:"1px solid "+T.accentGreen+"33" }}>
+                      ✓ {h.done} terminé{h.done>1?"s":""}
+                    </span>
+                  )}
+                  {inprogCount > 0 && (
+                    <span style={{ fontSize: 10, padding:"2px 8px", borderRadius:20, background:T.accent+"15", color:T.accent, border:"1px solid "+T.accent+"33" }}>
+                      ⏳ {inprogCount} en cours
+                    </span>
+                  )}
+                  {wishCount > 0 && (
+                    <span style={{ fontSize: 10, padding:"2px 8px", borderRadius:20, background:T.accentViolet+"15", color:T.accentViolet, border:"1px solid "+T.accentViolet+"33" }}>
+                      ✦ {wishCount} wishlist
+                    </span>
+                  )}
+                  {totalMins > 0 && (
+                    <span style={{ fontSize: 10, padding:"2px 8px", borderRadius:20, background:T.accentPink+"15", color:T.accentPink, border:"1px solid "+T.accentPink+"33" }}>
+                      ⏱ {totalHours>0?totalHours+"h":""}{totalMinsRem>0?totalMinsRem+"m":""}
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -9009,6 +9283,101 @@ data, themeMode }) {
       )}
 
       {subtab === "badges" && <DIY_BadgeGrid data={data}/>}
+
+      {subtab === "mois" && (function() {
+        var now = new Date();
+        var summary = computeDIYMonthSummary(selectedMonth.year, selectedMonth.month);
+        var isCurrentMonth = selectedMonth.year === now.getFullYear() && selectedMonth.month === now.getMonth()+1;
+        var isFuture = selectedMonth.year > now.getFullYear() || (selectedMonth.year === now.getFullYear() && selectedMonth.month > now.getMonth()+1);
+        var isPastLimit = selectedMonth.year < 2026 || (selectedMonth.year === 2026 && selectedMonth.month <= 4);
+
+        function prevMonth() {
+          setSelectedMonth(function(m) {
+            var mo = m.month-1; var yr = m.year;
+            if (mo < 1) { mo=12; yr--; }
+            return {year:yr, month:mo};
+          });
+        }
+        function nextMonth() {
+          setSelectedMonth(function(m) {
+            var mo = m.month+1; var yr = m.year;
+            if (mo > 12) { mo=1; yr++; }
+            return {year:yr, month:mo};
+          });
+        }
+
+        var totalH = Math.floor(summary.totalMins/60);
+        var totalM = summary.totalMins%60;
+
+        return (
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {/* Navigation mois */}
+            <div style={{background:T.surfaceCard,border:"1px solid "+T.border,borderRadius:14,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <button onClick={prevMonth} disabled={isPastLimit} style={{border:"none",background:"none",cursor:isPastLimit?"default":"pointer",fontSize:18,color:isPastLimit?T.border:T.textMuted,padding:"2px 6px"}}>‹</button>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:14,fontWeight:700,color:T.text}}>{MONTH_NAMES[selectedMonth.month]} {selectedMonth.year}</div>
+                {isCurrentMonth && <div style={{fontSize:10,color:T.accent}}>Mois en cours</div>}
+              </div>
+              <button onClick={nextMonth} disabled={isFuture} style={{border:"none",background:"none",cursor:isFuture?"default":"pointer",fontSize:18,color:isFuture?T.border:T.textMuted,padding:"2px 6px"}}>›</button>
+            </div>
+
+            {!summary.hasData && (
+              <div style={{background:T.surfaceCard,border:"1px solid "+T.border,borderRadius:14,padding:"2rem",textAlign:"center",color:T.textMuted,fontSize:13}}>
+                Aucune activité ce mois-là.
+              </div>
+            )}
+
+            {summary.hasData && (
+              <React.Fragment>
+                {/* Stats principales */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {summary.doneThisMonth.length > 0 && (
+                    <div style={{background:T.surfaceCard,border:"1px solid "+T.accentGreen+"33",borderRadius:14,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:T.accentGreen}}>{summary.doneThisMonth.length}</div>
+                      <div style={{fontSize:11,color:T.textMuted}}>projet{summary.doneThisMonth.length>1?"s":""} terminé{summary.doneThisMonth.length>1?"s":""}</div>
+                    </div>
+                  )}
+                  {summary.xpThisMonth > 0 && (
+                    <div style={{background:T.surfaceCard,border:"1px solid "+T.accent+"33",borderRadius:14,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:T.accent}}>{summary.xpThisMonth} XP</div>
+                      <div style={{fontSize:11,color:T.textMuted}}>gagnés ce mois</div>
+                    </div>
+                  )}
+                  {summary.totalMins > 0 && (
+                    <div style={{background:T.surfaceCard,border:"1px solid "+T.accentPink+"33",borderRadius:14,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:T.accentPink}}>{totalH>0?totalH+"h":""}{totalM>0?totalM+"m":""}</div>
+                      <div style={{fontSize:11,color:T.textMuted}}>temps passé</div>
+                    </div>
+                  )}
+                  {summary.startedThisMonth.length > 0 && (
+                    <div style={{background:T.surfaceCard,border:"1px solid "+T.accentViolet+"33",borderRadius:14,padding:"10px 12px"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:T.accentViolet}}>{summary.startedThisMonth.length}</div>
+                      <div style={{fontSize:11,color:T.textMuted}}>projet{summary.startedThisMonth.length>1?"s":""} démarré{summary.startedThisMonth.length>1?"s":""}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Projets terminés */}
+                {summary.doneThisMonth.length > 0 && (
+                  <div style={{background:T.surfaceCard,border:"1px solid "+T.border,borderRadius:14,padding:"12px 14px"}}>
+                    <div style={{fontSize:11,fontWeight:600,color:T.textMuted,marginBottom:8,letterSpacing:"0.5px"}}>TERMINÉS CE MOIS</div>
+                    {summary.doneThisMonth.map(function(p) {
+                      var h = hobbies.find(function(x){return x.id===p.hobby;})||{emoji:"✦"};
+                      return (
+                        <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"0.5px solid "+T.border}}>
+                          <span style={{fontSize:14}}>{h.emoji}</span>
+                          <span style={{flex:1,fontSize:12,color:T.text}}>{p.name}</span>
+                          <span style={{fontSize:11,color:T.accentGreen,fontWeight:600}}>+{p.xp} XP</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </React.Fragment>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -9033,6 +9402,8 @@ function DiyTrackerApp(props) {
   const [pendingBadge, setPendingBadge] = useState(null);
   const toastTimer = useRef(null);
   const importRef = useRef(null);
+  const [showDIYMonthly, setShowDIYMonthly] = useState(false);
+  const [wishRandom, setWishRandom] = useState(null);
 
   useEffect(function() {
     async function load() {
@@ -9045,6 +9416,22 @@ function DiyTrackerApp(props) {
   }, []);
 
   useEffect(function() { if (data) storage.set(DIY_KEY, data); }, [data]);
+
+  // Popup résumé mensuel — 1er du mois
+  useEffect(function() {
+    if (!data) return;
+    var today = new Date();
+    if (today.getDate() !== 1) return;
+    var lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
+    var lastYear  = today.getMonth() === 0 ? today.getFullYear()-1 : today.getFullYear();
+    var seenKey = "diy_monthly_seen_"+lastYear+"_"+lastMonth;
+    try {
+      if (!sessionStorage.getItem(seenKey)) {
+        sessionStorage.setItem(seenKey, "1");
+        setTimeout(function() { setShowDIYMonthly(true); }, 2000);
+      }
+    } catch(e) {}
+  }, [data]);
 
   // Vérification badges
   const prevBadgesRef = useRef({});
@@ -9088,7 +9475,9 @@ function DiyTrackerApp(props) {
 
   function addProject(proj) {
     setData(function(d) {
-      var newProj = Object.assign({ id: d.nextId, notes: [] }, proj);
+      // order = plus grand ordre existant dans ce statut + 1
+      var maxOrder = d.projects.filter(function(p) { return p.status === proj.status; }).reduce(function(mx,p) { return Math.max(mx, p.order||0); }, 0);
+      var newProj = Object.assign({ id: d.nextId, notes: [], order: maxOrder + 1 }, proj);
       var gained = calcProjectXP(proj.status, proj.difficulty);
       return Object.assign({}, d, {
         projects: [newProj].concat(d.projects),
@@ -9097,6 +9486,29 @@ function DiyTrackerApp(props) {
       });
     });
     showToast("Projet ajouté ✦");
+  }
+
+  function moveProject(id, direction) {
+    setData(function(d) {
+      var proj = d.projects.find(function(p) { return p.id === id; });
+      if (!proj) return d;
+      // Projets du même statut triés par ordre
+      var sameStatus = d.projects.filter(function(p) { return p.status === proj.status; }).slice().sort(function(a,b) { return (a.order||0)-(b.order||0); });
+      var idx = sameStatus.findIndex(function(p) { return p.id === id; });
+      var swapIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= sameStatus.length) return d;
+      // Échanger les ordres
+      var orderA = proj.order || idx;
+      var swapProj = sameStatus[swapIdx];
+      var orderB = swapProj.order || swapIdx;
+      return Object.assign({}, d, {
+        projects: d.projects.map(function(p) {
+          if (p.id === id) return Object.assign({}, p, { order: orderB });
+          if (p.id === swapProj.id) return Object.assign({}, p, { order: orderA });
+          return p;
+        })
+      });
+    });
   }
 
   function updateProject(updated) {
@@ -9222,7 +9634,13 @@ function DiyTrackerApp(props) {
     return true;
   });
   filteredProjects = filteredProjects.slice().sort(function(a, b) {
-    if (sortBy === "status") { var so = { inprogress: 0, wishlist: 1, done: 2 }; return (so[a.status]||0) - (so[b.status]||0); }
+    if (sortBy === "status") {
+      var so = { inprogress: 0, wishlist: 1, done: 2 };
+      var statusDiff = (so[a.status]||0) - (so[b.status]||0);
+      if (statusDiff !== 0) return statusDiff;
+      // Même statut → ordre manuel
+      return (a.order||0) - (b.order||0);
+    }
     if (sortBy === "name") return a.name.localeCompare(b.name);
     if (sortBy === "hobby") return a.hobby.localeCompare(b.hobby);
     if (sortBy === "diff") { var sd = { Difficile: 0, Moyen: 1, Facile: 2, "": 3 }; return (sd[a.difficulty||""]||3) - (sd[b.difficulty||""]||3); }
@@ -9472,8 +9890,39 @@ function DiyTrackerApp(props) {
                       </div>
                     )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {regular.map(function(p) {
-                        return <DIY_ProjectCard key={p.id} project={p} hobbies={data.hobbies} onClick={function() { setDetailProject(p); }} onToggleHighlight={toggleHighlight}/>;
+                      {/* Bouton wishlist aléatoire */}
+                      {(function() {
+                        var wishProjects = data.projects.filter(function(p) { return p.status === "wishlist"; });
+                        if (wishProjects.length === 0) return null;
+                        return (
+                          <button onClick={function() {
+                            var idx = Math.floor(Math.random() * wishProjects.length);
+                            setWishRandom(wishProjects[idx]);
+                          }} style={{ padding:"10px 14px", borderRadius:12, border:"1px dashed "+T.accentViolet+"66", background:T.accentViolet+"08", color:T.accentViolet, fontSize:12, cursor:"pointer", fontWeight:500, textAlign:"left", display:"flex", alignItems:"center", gap:8 }}>
+                            <span style={{fontSize:18}}>🎲</span>
+                            <span>Et si aujourd'hui... <span style={{fontWeight:600}}>{wishProjects.length} projet{wishProjects.length>1?"s":""} en wishlist</span></span>
+                          </button>
+                        );
+                      })()}
+                      {regular.map(function(p, idx) {
+                        // Projets du même statut pour savoir si ▲▼ sont possibles
+                        var sameStatus = filteredProjects.filter(function(x) { return x.status === p.status; });
+                        var posInStatus = sameStatus.findIndex(function(x) { return x.id === p.id; });
+                        var canUp   = sortBy === "status" && posInStatus > 0;
+                        var canDown = sortBy === "status" && posInStatus < sameStatus.length - 1;
+                        return (
+                          <div key={p.id} style={{position:"relative"}}>
+                            {sortBy === "status" && (canUp || canDown) && (
+                              <div style={{position:"absolute",top:8,right:8,zIndex:10,display:"flex",flexDirection:"column",gap:2}}>
+                                <button onClick={function(e){e.stopPropagation();moveProject(p.id,"up");}} disabled={!canUp}
+                                  style={{width:22,height:22,borderRadius:6,border:"1px solid "+T.border,background:T.surface,color:canUp?T.text:T.border,cursor:canUp?"pointer":"default",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>▲</button>
+                                <button onClick={function(e){e.stopPropagation();moveProject(p.id,"down");}} disabled={!canDown}
+                                  style={{width:22,height:22,borderRadius:6,border:"1px solid "+T.border,background:T.surface,color:canDown?T.text:T.border,cursor:canDown?"pointer":"default",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>▼</button>
+                              </div>
+                            )}
+                            <DIY_ProjectCard project={p} hobbies={data.hobbies} onClick={function() { setDetailProject(p); }} onToggleHighlight={toggleHighlight}/>
+                          </div>
+                        );
                       })}
                     </div>
                   </React.Fragment>
@@ -9503,6 +9952,87 @@ function DiyTrackerApp(props) {
           onMouseEnter={function(e) { e.currentTarget.style.transform = "scale(1.08)"; }}
           onMouseLeave={function(e) { e.currentTarget.style.transform = "scale(1)"; }}
         >+</button>
+      )}
+
+      {/* Popup résumé mensuel DIY */}
+      {showDIYMonthly && data && (function() {
+        var today = new Date();
+        var lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
+        var lastYear  = today.getMonth() === 0 ? today.getFullYear()-1 : today.getFullYear();
+        var MONTH_NAMES = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+        var pad = function(n) { return n < 10 ? "0"+n : ""+n; };
+        var monthStr = pad(lastMonth)+"/"+lastYear;
+        function inMonth(dateStr) {
+          if (!dateStr) return false;
+          if (dateStr.includes("-")) { var p=dateStr.split("-"); return p[1]===pad(lastMonth)&&p[0]===""+lastYear; }
+          return dateStr.slice(3) === monthStr;
+        }
+        var doneThisMonth = data.projects.filter(function(p) { return p.status==="done" && inMonth(p.completedDate||p.completedAt); });
+        var xpThisMonth = doneThisMonth.reduce(function(s,p){return s+(p.xp||0);},0);
+        if (!doneThisMonth.length && !xpThisMonth) { setShowDIYMonthly(false); return null; }
+        return (
+          <div onClick={function(){setShowDIYMonthly(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 20px 0"}}>
+            <div onClick={function(e){e.stopPropagation();}} style={{background:T.modalBg,border:"0.5px solid "+T.accent+"55",borderRadius:24,padding:"1.4rem 1.2rem",width:"100%",maxWidth:480,display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:T.text}}>Résumé DIY — {MONTH_NAMES[lastMonth]}</div>
+                  <div style={{fontSize:11,color:T.accent}}>Bilan du mois écoulé</div>
+                </div>
+                <button onClick={function(){setShowDIYMonthly(false);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:18,color:T.textMuted}}>✕</button>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {doneThisMonth.length > 0 && <div style={{background:T.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+T.border}}>
+                  <div style={{fontSize:18,fontWeight:700,color:T.accentGreen}}>{doneThisMonth.length}</div>
+                  <div style={{fontSize:11,color:T.textMuted}}>projet{doneThisMonth.length>1?"s":""} terminé{doneThisMonth.length>1?"s":""}</div>
+                </div>}
+                {xpThisMonth > 0 && <div style={{background:T.surfaceCard,borderRadius:12,padding:"10px 12px",border:"0.5px solid "+T.border}}>
+                  <div style={{fontSize:18,fontWeight:700,color:T.accent}}>{xpThisMonth} XP</div>
+                  <div style={{fontSize:11,color:T.textMuted}}>gagnés</div>
+                </div>}
+              </div>
+              {doneThisMonth.length > 0 && (
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {doneThisMonth.map(function(p) {
+                    var h=data.hobbies.find(function(x){return x.id===p.hobby;})||{emoji:"✦"};
+                    return <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 10px",borderRadius:10,background:T.surfaceCard}}>
+                      <span>{h.emoji}</span>
+                      <span style={{flex:1,fontSize:12,color:T.text}}>{p.name}</span>
+                      <span style={{fontSize:11,color:T.accentGreen,fontWeight:600}}>+{p.xp} XP</span>
+                    </div>;
+                  })}
+                </div>
+              )}
+              <button onClick={function(){setShowDIYMonthly(false);setTab("stats");}} style={{padding:"9px",borderRadius:14,border:"1px solid "+T.accent+"44",background:T.accent+"12",color:T.accent,fontSize:12,cursor:"pointer",fontWeight:600}}>
+                Voir le détail →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Wishlist aléatoire */}
+      {wishRandom && (
+        <div onClick={function(){setWishRandom(null);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 1.2rem"}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:T.modalBg,border:"1px solid "+T.accentViolet+"44",borderRadius:20,padding:"1.4rem 1.2rem",width:"100%",maxWidth:400,display:"flex",flexDirection:"column",gap:12}}>
+            <div style={{fontSize:15,fontWeight:700,color:T.text}}>✦ Et si aujourd'hui...</div>
+            <div style={{padding:"14px",borderRadius:14,background:T.filterActive,border:"1px solid "+T.accent+"33"}}>
+              <div style={{fontSize:16,fontWeight:600,color:T.text,marginBottom:6}}>{wishRandom.name}</div>
+              {(function(){var h=data.hobbies.find(function(x){return x.id===wishRandom.hobby;})||{emoji:"✦",label:""};
+                return <div style={{fontSize:12,color:T.textMuted}}>{h.emoji} {h.label}{wishRandom.difficulty?" · "+wishRandom.difficulty:""}</div>;})()}
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={function(){
+                setData(function(d){return Object.assign({},d,{projects:d.projects.map(function(p){return p.id===wishRandom.id?Object.assign({},p,{status:"inprogress"}):p;})});});
+                setWishRandom(null); showToast("Projet démarré !");
+              }} style={{flex:1,padding:"9px",borderRadius:14,border:"none",background:T.accent,color:T.bg,fontSize:13,cursor:"pointer",fontWeight:700}}>Démarrer ce projet</button>
+              <button onClick={function(){
+                var wish=data.projects.filter(function(p){return p.status==="wishlist";});
+                if(wish.length>0){setWishRandom(wish[Math.floor(Math.random()*wish.length)]);}
+              }} style={{padding:"9px 14px",borderRadius:14,border:"1px solid "+T.border,background:T.surfaceLight,color:T.textMuted,fontSize:13,cursor:"pointer"}}>🎲 Autre</button>
+              <button onClick={function(){setWishRandom(null);}} style={{padding:"9px 12px",borderRadius:14,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:13,cursor:"pointer"}}>✕</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}
