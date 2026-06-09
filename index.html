@@ -1599,7 +1599,7 @@ const storage = {
     // Supabase en priorité si connecté
     if (supaAuth.userId) {
       try {
-        var rows = await supaFetch("/saves?user_id=eq." + supaAuth.userId + "&key=eq." + encodeURIComponent(key) + "&select=value", "GET");
+        var rows = await supaFetch("/saves?user_id=eq." + supaAuth.userId + "&key=eq." + encodeURIComponent(key) + "&select=value,updated_at&order=updated_at.desc&limit=1", "GET");
         if (rows && rows.length > 0) return rows[0].value;
       } catch(e) {}
     }
