@@ -4988,7 +4988,28 @@ function GalerieTracker({ gallery, setGallery, skills, tasks, history, initialLi
         </div>
       )}
 
-      {lightbox && (
+      {lightbox && (function() {
+        var [editLink, setEditLink] = useState(false);
+        var [editTask, setEditTask] = useState(String(lightbox.taskId||""));
+        var [editSkills, setEditSkills] = useState((lightbox.skillIds||[]).slice());
+
+        function saveLink() {
+          var task = editTask ? doneTasks.find(function(t){return String(t.id)===editTask;}) : null;
+          var updated = Object.assign({}, lightbox, {
+            taskId: task ? task.id : null,
+            taskName: task ? task.name : null,
+            skillIds: editSkills.slice(),
+          });
+          setGallery(function(prev) { return prev.map(function(img) { return img.id===updated.id ? updated : img; }); });
+          setLightbox(updated);
+          setEditLink(false);
+        }
+
+        function toggleEditSkill(sid) {
+          setEditSkills(function(prev) { return prev.includes(sid) ? prev.filter(function(s){return s!==sid;}) : [...prev,sid]; });
+        }
+
+        return (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",flexDirection:"column"}} onClick={function(e){if(e.target===e.currentTarget)setLightbox(null);}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",flexShrink:0}}>
             <span style={{fontSize:11,padding:"3px 10px",borderRadius:20,background:lightbox.tag==="dessin"?THEME.accent+"33":THEME.accentGold+"33",color:lightbox.tag==="dessin"?THEME.accent:THEME.accentGold,fontWeight:700}}>
@@ -5002,23 +5023,59 @@ function GalerieTracker({ gallery, setGallery, skills, tasks, history, initialLi
           <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",padding:"0 16px"}}>
             <img src={lightbox.url} alt={lightbox.caption||""} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",borderRadius:12}}/>
           </div>
-          {(lightbox.caption||lightbox.taskName||(lightbox.skillIds||[]).length>0) && (
-            <div style={{padding:"12px 16px 28px",flexShrink:0}}>
-              {lightbox.caption && <div style={{fontSize:14,color:"#fff",fontWeight:500,marginBottom:6}}>{lightbox.caption}</div>}
-              {lightbox.taskName && <div style={{fontSize:12,color:THEME.accent,marginBottom:6}}>Tache : {lightbox.taskName}</div>}
-              {(lightbox.skillIds||[]).length > 0 && (
+          <div style={{padding:"12px 16px 28px",flexShrink:0,display:"flex",flexDirection:"column",gap:8}}>
+            {lightbox.caption && <div style={{fontSize:14,color:"#fff",fontWeight:500}}>{lightbox.caption}</div>}
+
+            {/* Lien tâche + skills — affichage ou édition */}
+            {!editLink ? (
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                {lightbox.taskName && <span style={{fontSize:12,color:THEME.accent}}>🎨 {lightbox.taskName}</span>}
+                {!lightbox.taskName && <span style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>Aucune tâche liée</span>}
+                {(lightbox.skillIds||[]).length > 0 && (
+                  <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                    {(lightbox.skillIds||[]).map(function(sid) {
+                      var sk = (skills||[]).find(function(s){return s.id===sid;});
+                      return sk ? <span key={sid} style={{fontSize:10,padding:"2px 7px",borderRadius:20,background:sk.color+"33",color:sk.color}}>{sk.name}</span> : null;
+                    })}
+                  </div>
+                )}
+                <button onClick={function(){setEditLink(true);setEditTask(String(lightbox.taskId||""));setEditSkills((lightbox.skillIds||[]).slice());}}
+                  style={{fontSize:11,padding:"3px 10px",borderRadius:20,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
+                  {lightbox.taskName ? "Modifier le lien" : "Lier une tâche"}
+                </button>
+              </div>
+            ) : (
+              <div style={{background:"rgba(0,0,0,0.5)",borderRadius:12,padding:"10px 12px",display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",marginBottom:2}}>Lier à une tâche</div>
+                <select value={editTask} onChange={function(e){setEditTask(e.target.value);}}
+                  style={{padding:"7px 10px",borderRadius:8,fontSize:12,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(0,0,0,0.6)",color:"#fff",width:"100%"}}>
+                  <option value="">-- Aucune tâche --</option>
+                  {doneTasks.slice(0,50).map(function(t) {
+                    return <option key={t.id} value={String(t.id)}>{t.name} ({t.theme})</option>;
+                  })}
+                </select>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.5)"}}>Compétences</div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                  {(lightbox.skillIds||[]).map(function(sid) {
-                    var sk = (skills||[]).find(function(s){return s.id===sid;});
-                    if (!sk) return null;
-                    return <span key={sid} style={{fontSize:11,padding:"3px 10px",borderRadius:20,background:sk.color+"22",color:sk.color,border:"1px solid "+sk.color+"44"}}>{sk.name}</span>;
+                  {(skills||[]).map(function(sk) {
+                    var active = editSkills.includes(sk.id);
+                    return (
+                      <button key={sk.id} onClick={function(){toggleEditSkill(sk.id);}}
+                        style={{padding:"3px 9px",borderRadius:20,fontSize:10,cursor:"pointer",border:active?"1px solid "+sk.color+"88":"1px solid rgba(255,255,255,0.15)",background:active?sk.color+"33":"rgba(255,255,255,0.05)",color:active?sk.color:"rgba(255,255,255,0.5)",fontWeight:active?600:400}}>
+                        {sk.name}
+                      </button>
+                    );
                   })}
                 </div>
-              )}
-            </div>
-          )}
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={saveLink} style={{flex:1,padding:"7px",borderRadius:10,border:"none",background:THEME.accent,color:"#fff",fontSize:12,cursor:"pointer",fontWeight:600}}>Enregistrer</button>
+                  <button onClick={function(){setEditLink(false);}} style={{padding:"7px 12px",borderRadius:10,border:"1px solid rgba(255,255,255,0.15)",background:"transparent",color:"rgba(255,255,255,0.5)",fontSize:12,cursor:"pointer"}}>Annuler</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -5347,6 +5404,7 @@ function ArtTrackerApp(props) {
   const [decayState,     setDecayState]     = useState(null);
   const [gallery,        setGallery]        = useState([]);
   const [galleryOpenImg,  setGalleryOpenImg]  = useState(null);
+  const [galleryLoaded,   setGalleryLoaded]   = useState(false);
   const [globalXp,       setGlobalXp]       = useState(0);
   const [editingTask,    setEditingTask]    = useState(null);
   const [showNewTask,    setShowNewTask]    = useState(false);
@@ -5454,7 +5512,8 @@ function ArtTrackerApp(props) {
       if (chall) setChallenges(chall);
       if (form)  setFormations(form);
       if (timer) setTimerData(timer);
-      if (gal)   setGallery(gal);
+      if (gal)   { setGallery(gal); }
+      setGalleryLoaded(true);
       if (proj)  setProjects(proj);
       if (decay) setDecayState(decay);
       if (excl && EXCLUSIVE_THEMES[excl]) setActiveExclusiveTheme(excl);
@@ -5487,7 +5546,7 @@ function ArtTrackerApp(props) {
   useEffect(function() { if (loaded) storage.set(CHALLENGES_KEY,challenges); }, [challenges,loaded]);
   useEffect(function() { if (loaded) storage.set(FORMATIONS_KEY,formations); }, [formations,loaded]);
   useEffect(function() { if (loaded) storage.set(TIMER_KEY,timerData); }, [timerData,loaded]);
-  useEffect(function() { if (loaded) storage.set(GALLERY_KEY,gallery); }, [gallery,loaded]);
+  useEffect(function() { if (loaded && galleryLoaded) storage.set(GALLERY_KEY,gallery); }, [gallery,loaded,galleryLoaded]);
   useEffect(function() { if (loaded) storage.set(PROJECTS_KEY,projects); }, [projects,loaded]);
   useEffect(function() { if (loaded&&decayState) storage.set(DECAY_KEY,decayState); }, [decayState,loaded]);
   useEffect(function() { if (loaded) storage.set("art_tracker_theme_v1", themeMode); }, [themeMode,loaded]);
