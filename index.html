@@ -1993,6 +1993,7 @@ function HistoryEntry(props) {
   const onRemove = props.onRemove;
   const gallery = props.gallery || [];
   const onGoToGallery = props.onGoToGallery;
+  const onEditGalleryImg = props.onEditGalleryImg;
   var linkedImages = entry.taskId ? gallery.filter(function(img){return img.taskId === entry.taskId;}) : [];
 
   var isLibre = !!entry.isLibre;
@@ -2001,6 +2002,7 @@ function HistoryEntry(props) {
   const [open, setOpen] = useState(false);
   const [editingDate, setEditingDate] = useState(false);
   const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showFreeBonus, setShowFreeBonus] = useState(false);
   const [freeBonusSkill, setFreeBonusSkill] = useState(skills && skills[0] ? skills[0].id : null);
@@ -2009,6 +2011,7 @@ function HistoryEntry(props) {
   const [showNote, setShowNote] = useState(false);
   const [noteText, setNoteText] = useState(entry.sessionNote || "");
   const [noteTags, setNoteTags] = useState(entry.sessionTags || []);
+  const [showGalleryLink, setShowGalleryLink] = useState(false);
 
   var NOTE_TAGS = [
     {id:"retenir",  label:"📌 À retenir"},
@@ -2037,13 +2040,14 @@ function HistoryEntry(props) {
       setNewDate(parts[2]+"-"+parts[1]+"-"+parts[0]);
     }
     setEditingDate(true);
+    var timePart = entry.date ? (entry.date.split(" ")[1] || "00:00") : "00:00";
+    setNewTime(timePart);
   }
   function saveDate() {
     if (newDate && onEditDate) {
       var parts = newDate.split("-");
       var formatted = parts[2]+"/"+parts[1]+"/"+parts[0];
-      var timePart = entry.date ? entry.date.split(" ")[1] : "00:00";
-      onEditDate(entry.id, formatted+" "+(timePart||"00:00"));
+      onEditDate(entry.id, formatted+" "+(newTime||"00:00"));
     }
     setEditingDate(false);
   }
@@ -2088,11 +2092,44 @@ function HistoryEntry(props) {
               })}
             </div>
           )}
+          {/* Lier une image de la galerie */}
+          {gallery && gallery.length > 0 && onGoToGallery && (
+            <div style={{marginTop:2}}>
+              {!showGalleryLink ? (
+                <button onClick={function(){setShowGalleryLink(true);}}
+                  style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.accentPink+"33",background:"transparent",color:THEME.textMuted,cursor:"pointer"}}>
+                  🖼️ {linkedImages.length > 0 ? "Modifier le lien galerie" : "Lier une image"}
+                </button>
+              ) : (
+                <div style={{marginTop:4,padding:"8px 10px",borderRadius:10,background:THEME.surfaceLight,border:"1px solid "+THEME.border}}>
+                  <div style={{fontSize:11,fontWeight:600,color:THEME.textMuted,marginBottom:6}}>Images sans lien</div>
+                  {gallery.filter(function(img){return !img.taskId;}).length === 0 && (
+                    <div style={{fontSize:11,color:THEME.textMuted,marginBottom:6}}>Toutes les images sont déjà liées.</div>
+                  )}
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:6}}>
+                    {gallery.filter(function(img){return !img.taskId;}).slice(0,12).map(function(img) {
+                      return (
+                        <button key={img.id} onClick={function(){
+                          if (onEditGalleryImg) onEditGalleryImg(img.id, Object.assign({},img,{taskId:entry.taskId,taskName:entry.taskName}));
+                          setShowGalleryLink(false);
+                        }} style={{padding:0,border:"2px solid transparent",borderRadius:8,background:"none",cursor:"pointer",flexShrink:0}}
+                        title={img.caption||"Sans titre"}>
+                          <img src={img.url} alt="" style={{width:40,height:40,borderRadius:6,objectFit:"cover",display:"block"}}/>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button onClick={function(){setShowGalleryLink(false);}} style={{fontSize:10,padding:"2px 8px",borderRadius:20,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,cursor:"pointer"}}>Fermer</button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
           {editingDate ? (
-            <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
               <input type="date" value={newDate} onChange={function(e){setNewDate(e.target.value);}} style={{fontSize:10,padding:"2px 6px",borderRadius:6,border:"1px solid "+THEME.accent+"44",background:THEME.inputBg,color:THEME.text}}/>
+              <input type="time" value={newTime} onChange={function(e){setNewTime(e.target.value);}} style={{fontSize:10,padding:"2px 6px",borderRadius:6,border:"1px solid "+THEME.accent+"44",background:THEME.inputBg,color:THEME.text,width:80}}/>
               <button onClick={saveDate} style={{fontSize:10,padding:"2px 7px",borderRadius:99,border:"1px solid "+THEME.accentGreen+"44",background:THEME.accentGreen+"12",color:THEME.accentGreen,cursor:"pointer"}}>✓</button>
               <button onClick={function(){setEditingDate(false);}} style={{fontSize:10,padding:"2px 7px",borderRadius:99,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,cursor:"pointer"}}>✕</button>
             </div>
@@ -6852,7 +6889,7 @@ function ArtTrackerApp(props) {
                 if (filtered.length===0) return <div style={{color:THEME.textMuted,fontSize:13}}>Aucune entrée pour ce filtre.</div>;
                 return filtered.map(function(entry) {
                   var task = (tasks||[]).find(function(t) { return t.id===entry.taskId; });
-                  return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onEditNote={editHistoryNote} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}}/>;
+                  return <HistoryEntry key={entry.id} entry={entry} task={task} skills={skills} onAddBonus={addBonusToHistory} onEditDate={editHistoryDate} onEditNote={editHistoryNote} onRemove={removeHistoryEntry} gallery={gallery} onGoToGallery={function(img){setGalleryOpenImg(img);setPage("galerie");}} onEditGalleryImg={function(imgId,updated){setGallery(function(prev){return prev.map(function(img){return img.id===imgId?updated:img;});});}}/>;
                 });
               })()}
             </div>
