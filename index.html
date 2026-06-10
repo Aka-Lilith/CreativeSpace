@@ -2785,7 +2785,14 @@ function ChallengesPage(props) {
     if (c.rewards && c.rewards.length>0) allRewards = allRewards.concat(c.rewards);
     var dayR = (c.dayRewards||{})[day]||[];
     if (dayR.length>0) allRewards = allRewards.concat(dayR);
-    if (allRewards.length>0) onXpRemove(allRewards);
+    // Fusionner les rewards du même skillId
+    var merged = [];
+    allRewards.forEach(function(r) {
+      var existing = merged.find(function(m) { return m.skillId === r.skillId; });
+      if (existing) { existing.xp += r.xp; }
+      else { merged.push({skillId: r.skillId, xp: r.xp}); }
+    });
+    if (merged.length>0) onXpRemove(merged);
   }
   function handleDayXp(cid, day) {
     var c = thirty.find(function(x) { return x.id===cid; });
@@ -2796,7 +2803,14 @@ function ChallengesPage(props) {
     // Gain spécifique au jour
     var dayR = (c.dayRewards||{})[day]||[];
     if (dayR.length>0) allRewards = allRewards.concat(dayR);
-    if (allRewards.length>0) onXpGain(allRewards, "📅 "+c.name+" — Jour "+day);
+    // Fusionner les rewards du même skillId pour éviter que find() écrase l'un par l'autre
+    var merged = [];
+    allRewards.forEach(function(r) {
+      var existing = merged.find(function(m) { return m.skillId === r.skillId; });
+      if (existing) { existing.xp += r.xp; }
+      else { merged.push({skillId: r.skillId, xp: r.xp}); }
+    });
+    if (merged.length>0) onXpGain(merged, "📅 "+c.name+" — Jour "+day);
   }
 
   function updateDayRewards(cid, day, rewards) {
@@ -3007,6 +3021,8 @@ function FormationCard(props) {
   const [newSection, setNewSection] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [confirmDeleteForm, setConfirmDeleteForm] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completionNote, setCompletionNote] = useState("");
 
   var done = (f.sections||[]).filter(function(s){return s.done;}).length;
   var total = (f.sections||[]).length;
@@ -3050,6 +3066,7 @@ function FormationCard(props) {
             {f.startDate && <span>📅 Début : {fmtDate(f.startDate)}</span>}
             {f.endDate && <span>🎯 Fin prévue : {fmtDate(f.endDate)}</span>}
             {f.completedDate && <span>✓ Terminée le : {fmtDate(f.completedDate)}</span>}
+          {f.completionNote && <div style={{fontSize:11,color:THEME.textMuted,fontStyle:"italic",marginTop:2}}>"{f.completionNote}"</div>}
           </div>
           {total > 0 && (
             <div style={{marginTop:6}}>
@@ -3117,10 +3134,72 @@ function FormationCard(props) {
 
           {/* Bouton terminer */}
           {!f.completed && (
-            <button onClick={function(){onComplete(f.id);}} style={{width:"100%",padding:"8px",borderRadius:10,cursor:"pointer",border:"1px solid "+THEME.accentGreen+"44",background:THEME.accentGreen+"12",color:THEME.accentGreen,fontSize:13,fontWeight:600}}>
+            <button onClick={function(){setShowCompleteModal(true);}} style={{width:"100%",padding:"8px",borderRadius:10,cursor:"pointer",border:"1px solid "+THEME.accentGreen+"44",background:THEME.accentGreen+"12",color:THEME.accentGreen,fontSize:13,fontWeight:600}}>
               🎓 Marquer comme terminée
             </button>
           )}
+        </div>
+      )}
+
+      {/* Modal de confirmation de fin */}
+      {showCompleteModal && (
+        <div onClick={function(){setShowCompleteModal(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(6px)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 20px 0"}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:THEME.surface,border:"0.5px solid "+THEME.accentGreen+"44",borderRadius:24,padding:"1.4rem 1.2rem",width:"100%",maxWidth:480,display:"flex",flexDirection:"column",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:THEME.text}}>🎓 Formation terminée !</div>
+                <div style={{fontSize:11,color:THEME.accentGreen}}>Résumé avant de valider</div>
+              </div>
+              <button onClick={function(){setShowCompleteModal(false);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:18,color:THEME.textMuted}}>✕</button>
+            </div>
+
+            {/* Résumé dates */}
+            <div style={{background:THEME.surfaceCard,borderRadius:12,padding:"10px 14px",border:"0.5px solid "+THEME.border,display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{fontSize:13,fontWeight:600,color:THEME.text,marginBottom:2}}>{f.name}</div>
+              {f.startDate && <div style={{fontSize:11,color:THEME.textMuted}}>📅 Début : {fmtDate(f.startDate)}</div>}
+              {f.endDate && <div style={{fontSize:11,color:THEME.textMuted}}>🎯 Fin prévue : {fmtDate(f.endDate)}</div>}
+              <div style={{fontSize:11,color:THEME.textMuted}}>✓ Terminée le : {new Date().toLocaleDateString("fr-FR")}</div>
+              {total > 0 && <div style={{fontSize:11,color:THEME.textMuted}}>📋 {done}/{total} sections complétées</div>}
+            </div>
+
+            {/* XP à gagner */}
+            {(f.rewards||[]).length > 0 && (
+              <div style={{background:THEME.accentGreen+"08",borderRadius:12,padding:"10px 14px",border:"0.5px solid "+THEME.accentGreen+"33"}}>
+                <div style={{fontSize:11,fontWeight:600,color:THEME.accentGreen,marginBottom:6}}>XP obtenu</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {(f.rewards||[]).map(function(r,i) {
+                    var sk=(skills||[]).find(function(s){return s.id===r.skillId;});
+                    if (!sk) return null;
+                    return <span key={i} style={{fontSize:13,fontWeight:700,background:sk.color+"18",border:"1px solid "+sk.color+"44",borderRadius:20,padding:"4px 12px",color:sk.color}}>+{r.xp} {sk.name}</span>;
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Notes de fin */}
+            <div>
+              <div style={{fontSize:11,color:THEME.textMuted,marginBottom:5}}>Notes de fin (optionnel)</div>
+              <textarea
+                value={completionNote}
+                onChange={function(e){setCompletionNote(e.target.value);}}
+                placeholder="Ce que j'ai appris, ce que je retiens..."
+                rows={3}
+                style={{width:"100%",padding:"8px 10px",borderRadius:10,border:"1px solid "+THEME.border,background:THEME.inputBg,color:THEME.text,fontSize:12,resize:"vertical",fontFamily:"'Inter',sans-serif",lineHeight:1.5,boxSizing:"border-box",outline:"none"}}
+              />
+            </div>
+
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={function(){
+                onComplete(f.id, completionNote);
+                setShowCompleteModal(false);
+              }} style={{flex:1,padding:"10px",borderRadius:14,border:"none",background:THEME.accentGreen,color:"#fff",fontSize:13,cursor:"pointer",fontWeight:700}}>
+                ✓ Valider la complétion
+              </button>
+              <button onClick={function(){setShowCompleteModal(false);}} style={{padding:"10px 14px",borderRadius:14,border:"1px solid "+THEME.border,background:"transparent",color:THEME.textMuted,fontSize:13,cursor:"pointer"}}>
+                Annuler
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -3374,7 +3453,7 @@ var BADGES = [
   {id:"t25",      emoji:"🔥", label:"Feu sacré",           desc:"25 tâches complétées",
     check:function(h,cc) { return Object.values(cc).reduce(function(a,v){return a+v;},0)>=25; }},
   {id:"t52",      emoji:"📚", label:"Maître exercices",    desc:"52 exercices complétés",
-    check:function(h,cc) { return Object.values(cc).filter(function(v){return v>0;}).length>=52; }},
+    check:function(h,cc) { return Object.values(cc).reduce(function(a,v){return a+v;},0)>=52; }},
 
   // --- XP ---
   {id:"xp100",    emoji:"💫", label:"Centurie",            desc:"100 XP accumulé",
@@ -3461,9 +3540,9 @@ var BADGES = [
   {id:"proj1",     emoji:"🗂️", label:"Architecte",          desc:"Crée ton premier projet",
     check:function(h,cc,sk,t,td,proj) { return proj && proj.length>=1; }},
   {id:"proj_done1",emoji:"✅", label:"Bâtisseur",           desc:"Termine un projet complet",
-    check:function(h,cc,sk,t,td,proj) { return proj && proj.some(function(p){return p.status==="termine";}); }},
+    check:function(h,cc,sk,t,td,proj) { return proj && proj.some(function(p){return p.status==="done";}); }},
   {id:"proj_done3",emoji:"🏗️", label:"Grand œuvre",         desc:"Termine 3 projets",
-    check:function(h,cc,sk,t,td,proj) { return proj && proj.filter(function(p){return p.status==="termine";}).length>=3; }},
+    check:function(h,cc,sk,t,td,proj) { return proj && proj.filter(function(p){return p.status==="done";}).length>=3; }},
 
   // --- DTIYS ---
   {id:"dtiys1",    emoji:"🎭", label:"Fan art",             desc:"Termine ton premier DTIYS",
@@ -5519,6 +5598,7 @@ function ArtTrackerApp(props) {
       var gal   = val(7);
       var proj  = val(8);
       var decay = val(9);
+      var gxp   = val(10);
       var excl  = val(11);
       var ach   = val(12);
       var foc   = val(13);
@@ -5548,6 +5628,7 @@ function ArtTrackerApp(props) {
       setGalleryLoaded(true);
       if (proj)  setProjects(proj);
       if (decay) setDecayState(decay);
+      if (gxp !== null && gxp !== undefined) setGlobalXp(gxp);
       if (excl && EXCLUSIVE_THEMES[excl]) setActiveExclusiveTheme(excl);
       if (ach)  setAchievements(ach);
       if (foc && Array.isArray(foc)) setFocusSkills(foc);
@@ -5747,7 +5828,7 @@ function ArtTrackerApp(props) {
         }, i * 3500);
       });
     }
-  }, [history, completionCount, skills, tasks, timerData, projects, challenges, badgeDatesLoaded]);
+  }, [history, completionCount, skills, tasks, timerData, projects, challenges, formations, badgeDatesLoaded]);
 
   function generateSession() {
     var all = tasks||[];
@@ -5953,9 +6034,20 @@ function ArtTrackerApp(props) {
     applyXp(gains);
     var gl = gains.map(function(g) {
       var sk = skills.find(function(s) { return s.id===g.skillId; });
-      return sk ? "+"+g.xp+" "+sk.name : null;
+      return sk ? {skillId:sk.id, name:sk.name, xp:g.xp, color:sk.color} : null;
     }).filter(Boolean);
-    showToast(label+" — "+gl.join(" / "));
+    var entry = {
+      id: Date.now(),
+      taskId: null,
+      taskName: label,
+      theme: "Projet",
+      isLibre: false,
+      date: new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),
+      gains: gl,
+      claimedOptionals: [],
+    };
+    setHistory(function(prev) { return [entry,...prev]; });
+    showToast(label+" — "+gl.map(function(g) { return "+"+g.xp+" "+g.name; }).join(" / "));
   }
 
   function updateFormation(id, patch) {
@@ -5966,14 +6058,14 @@ function ArtTrackerApp(props) {
   function deleteFormation(id) {
     setFormations(function(prev) { return prev.filter(function(f) { return f.id!==id; }); });
   }
-  function completeFormation(id) {
+  function completeFormation(id, completionNote) {
     setFormations(function(prev) {
       return prev.map(function(f) {
         if (f.id!==id || f.completed) return f;
         if (f.rewards && f.rewards.length>0) {
           applyProjectXp(f.rewards, "📖 "+f.name+" — Terminée !");
         }
-        return {...f, completed:true, completedDate:new Date().toLocaleDateString("fr-FR")};
+        return {...f, completed:true, completedDate:new Date().toLocaleDateString("fr-FR"), completionNote: completionNote||""};
       });
     });
   }
@@ -6919,9 +7011,11 @@ function ArtTrackerApp(props) {
             setCC({});
             setGlobalXp(0);
             setActiveExclusiveTheme(null);
+            setFocusSkills([]);
             storage.set(STORAGE_KEY, {skills:DEFAULT_SKILLS, tasks:freshTasks, history:[], completionCount:{}});
             storage.set(GLOBAL_XP_KEY, 0);
             storage.set("art_tracker_exclusive_theme", "");
+            storage.set(FOCUS_KEY, []);
           }
           if (opts.type==="tasks") {
             var freshTasks2 = injectMedium(DEFAULT_TASKS);
@@ -7178,7 +7272,11 @@ function DashboardWidget(props) {
         // ---- Calculs DIY ----
         var diyProjects = diyRaw ? (diyRaw.projects || []) : [];
         var diyActive = diyProjects.filter(function(p) { return p.status === "inprogress"; });
-        var diyDone   = diyProjects.filter(function(p) { return p.status === "done"; }).length;
+        var diyDoneList = diyProjects.filter(function(p) { return p.status === "done"; });
+        var diyDone = diyDoneList.length;
+        // Projets les plus récents — triés par startDate ou completedDate
+        var latestActive = diyActive.slice().sort(function(a,b) { return (b.startDate||"").localeCompare(a.startDate||""); })[0];
+        var latestDone   = diyDoneList.slice().sort(function(a,b) { return (b.completedDate||b.startDate||"").localeCompare(a.completedDate||a.startDate||""); })[0];
 
         setSummary({
           // Tracker
@@ -7187,6 +7285,8 @@ function DashboardWidget(props) {
           trackerHasData: skills.length > 0,
           // DIY
           diyActive, diyDone, diyTotal: diyProjects.length,
+          diyLatestActive: latestActive ? latestActive.name : null,
+          diyLatestDone:   latestDone   ? latestDone.name   : null,
         });
       } catch(e) {
         setSummary({});
@@ -7308,10 +7408,20 @@ function DashboardWidget(props) {
         {/* Ligne 4 — DIY */}
         {summary.diyTotal > 0 && (
           <div onClick={function(){onOpen("diy");}} style={{background:cardBg,backdropFilter:"blur(12px)",border:"1px solid rgba(186,117,23,0.2)",borderRadius:16,padding:"10px 12px",cursor:"pointer",boxShadow:"0 2px 12px rgba(100,70,180,0.06)"}}>
-            <div style={{fontSize:16,marginBottom:4}}>🔧</div>
-            <div style={{fontSize:11,fontWeight:600,color:textMain,marginBottom:2}}>DIY Projects</div>
-            <div style={{fontSize:10,color:textMuted}}>{summary.diyActive.length} en cours</div>
-            <div style={{fontSize:10,color:"#1D9E75"}}>{summary.diyDone} terminés ✓</div>
+            <div style={{fontSize:16,marginBottom:6}}>🔧</div>
+            <div style={{fontSize:11,fontWeight:600,color:textMain,marginBottom:6}}>DIY Projects</div>
+            {summary.diyActive.length > 0 && (
+              <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:3,flexWrap:"wrap"}}>
+                <span style={{fontSize:10,color:"#F5C842"}}>⏳ {summary.diyActive.length} en cours</span>
+                {summary.diyLatestActive && <span style={{fontSize:10,color:textMuted}}>· {summary.diyLatestActive.length > 18 ? summary.diyLatestActive.slice(0,18)+"…" : summary.diyLatestActive}</span>}
+              </div>
+            )}
+            {summary.diyDone > 0 && (
+              <div style={{display:"flex",alignItems:"baseline",gap:4,flexWrap:"wrap"}}>
+                <span style={{fontSize:10,color:"#1D9E75"}}>✅ {summary.diyDone} terminé{summary.diyDone>1?"s":""}</span>
+                {summary.diyLatestDone && <span style={{fontSize:10,color:textMuted}}>· {summary.diyLatestDone.length > 18 ? summary.diyLatestDone.slice(0,18)+"…" : summary.diyLatestDone}</span>}
+              </div>
+            )}
           </div>
         )}
 
@@ -8187,6 +8297,11 @@ project, hobbies, onClose, onUpdate, onDelete }) {
   var [progUploading, setProgUploading] = useState(false);
   var [progCaption, setProgCaption] = useState("");
   const progInputRef = useRef(null);
+  // Matériaux
+  var [newMat, setNewMat] = useState("");
+  // Collaborateur
+  var [editingCollab, setEditingCollab] = useState(false);
+  var [collabVal, setCollabVal] = useState(project.collaborator || "");
 
   async function handlePhotoUpload(e) {
     var file = e.target.files && e.target.files[0];
@@ -8374,8 +8489,6 @@ project, hobbies, onClose, onUpdate, onDelete }) {
 
         {/* Collaborateur */}
         {(function() {
-          var [editingCollab, setEditingCollab] = useState(false);
-          var [collabVal, setCollabVal] = useState(project.collaborator || "");
           function saveCollab() {
             onUpdate(Object.assign({}, project, { collaborator: collabVal.trim() || null }));
             setEditingCollab(false);
@@ -8568,10 +8681,9 @@ project, hobbies, onClose, onUpdate, onDelete }) {
         </div>
 
         {/* Matériaux */}
-        {((project.materials||[]).length > 0 || true) && (function() {
+        {(function() {
           var mats = project.materials || [];
           var checkedCount = mats.filter(function(m) { return m.checked; }).length;
-          var [newMat, setNewMat] = useState("");
           function toggleMat(id) {
             onUpdate(Object.assign({}, project, {
               materials: mats.map(function(m) { return m.id === id ? Object.assign({}, m, { checked: !m.checked }) : m; })
@@ -9566,12 +9678,17 @@ function DiyTrackerApp(props) {
 
   function addProject(proj) {
     setData(function(d) {
+      // Assigne un order aux projets existants qui n'en ont pas
+      var needsOrder = d.projects.some(function(p) { return p.order === undefined; });
+      var baseProjects = needsOrder ? d.projects.map(function(p, i) {
+        return p.order !== undefined ? p : Object.assign({}, p, { order: i });
+      }) : d.projects;
       // order = plus grand ordre existant dans ce statut + 1
-      var maxOrder = d.projects.filter(function(p) { return p.status === proj.status; }).reduce(function(mx,p) { return Math.max(mx, p.order||0); }, 0);
+      var maxOrder = baseProjects.filter(function(p) { return p.status === proj.status; }).reduce(function(mx,p) { return Math.max(mx, p.order !== undefined ? p.order : 0); }, -1);
       var newProj = Object.assign({ id: d.nextId, notes: [], order: maxOrder + 1 }, proj);
       var gained = calcProjectXP(proj.status, proj.difficulty);
       return Object.assign({}, d, {
-        projects: [newProj].concat(d.projects),
+        projects: [newProj].concat(baseProjects),
         nextId: d.nextId + 1,
         xpEarned: (d.xpEarned || 0) + gained,
       });
@@ -9589,9 +9706,9 @@ function DiyTrackerApp(props) {
       var swapIdx = direction === "up" ? idx - 1 : idx + 1;
       if (swapIdx < 0 || swapIdx >= sameStatus.length) return d;
       // Échanger les ordres
-      var orderA = proj.order || idx;
+      var orderA = proj.order !== undefined ? proj.order : idx;
       var swapProj = sameStatus[swapIdx];
-      var orderB = swapProj.order || swapIdx;
+      var orderB = swapProj.order !== undefined ? swapProj.order : swapIdx;
       return Object.assign({}, d, {
         projects: d.projects.map(function(p) {
           if (p.id === id) return Object.assign({}, p, { order: orderB });
